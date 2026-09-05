@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **Not started — AG1 next**
-Last successful commit: **none yet**
+Current phase: **AG2 complete — AG3 next**
+Last successful commit: **ddfdd89**
 Current blocker: **none**
 
 ## Supplied starter
@@ -18,14 +18,14 @@ Current blocker: **none**
 - [x] model-specific Codex phase prompts
 
 ## Antigravity phases
-- [ ] AG1 Git/GitHub + secret-safe bootstrap
-  - Model used:
-  - Commit:
-  - Notes:
-- [ ] AG2 Frontend install/build/visual verification
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] AG1 Git/GitHub + secret-safe bootstrap
+  - Model used: GPT-OSS 120B (Medium)
+  - Commit: `ddfdd89`
+  - Notes: Repository initialized on main branch, origin remote connected to private repo HasanKhan05/PromptGuard-Ai, initial commit pushed.
+- [x] AG2 Frontend install/build/visual verification
+  - Model used: Gemini 3.7 Flash (Medium)
+  - Commit: `426b86c`
+  - Notes: Frontend dependencies installed cleanly, ESLint passes with 0 errors/warnings, Next.js production build succeeds, and dev server routes (/, /experiments, /benchmarks, /research) verified with HTTP 200.
 - [ ] AG3 Backend/FastAPI/OmniRoute verification
   - Model used:
   - Commit:
@@ -82,12 +82,12 @@ Current blocker: **none**
   - Notes:
 
 ## Foundation verification checklist
-- [ ] Git `main` initialized
-- [ ] Private GitHub repo connected/pushed
-- [ ] secrets ignored/untracked
-- [ ] frontend dependencies installed
-- [ ] frontend lint/check passes
-- [ ] frontend production build passes
+- [x] Git `main` initialized
+- [x] Private GitHub repo connected/pushed
+- [x] secrets ignored/untracked
+- [x] frontend dependencies installed
+- [x] frontend lint/check passes
+- [x] frontend production build passes
 - [ ] backend venv/dependencies installed
 - [ ] `GET /health` passes
 - [ ] OmniRoute key configured locally only
