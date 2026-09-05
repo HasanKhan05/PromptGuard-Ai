@@ -1,0 +1,4 @@
+PromptGuard Ai Optimized Agent Starter
+Revision: 2.0
+Date: 2026-09-05
+Workflow: Antigravity AG1-AG6 -> Codex CX0-CX8

@@ -1,0 +1,111 @@
+PROMPTGUARD AI OPTIMIZED STARTER — FILE MANIFEST
+
+Key control files:
+- START_HERE.txt — first user instructions
+- PHASE_LAUNCHERS.md — exact model/effort and one-line launcher for every AG/CX phase
+- AGENTS.md — hard repository rules for every coding agent
+- MASTER_ANTIGRAVITY_PROMPT.md — Antigravity phase boundary contract/index
+- MASTER_CODEX_PROMPT.md — Codex phase boundary contract/index
+- docs/IMPLEMENTATION_STATUS.md — durable cross-model handoff state
+- docs/MODEL_STRATEGY.md — quota/model allocation rationale and escalation policy
+- docs/TOKEN_RULES.md — development + runtime LLM token efficiency rules
+- PACKAGE_QA.md — checks completed before packaging
+
+All packaged files:
+.editorconfig
+.gitignore
+AGENTS.md
+MASTER_ANTIGRAVITY_PROMPT.md
+MASTER_CODEX_PROMPT.md
+PACKAGE_QA.md
+PACKAGE_VERSION.txt
+PHASE_LAUNCHERS.md
+README.md
+START_HERE.txt
+agent-prompts/antigravity/AG1_GIT_BOOTSTRAP.md
+agent-prompts/antigravity/AG2_FRONTEND_VERIFY.md
+agent-prompts/antigravity/AG3_BACKEND_OMNIROUTE.md
+agent-prompts/antigravity/AG4_STREAMING_INTEGRATION.md
+agent-prompts/antigravity/AG5_SQLITE_TESTS.md
+agent-prompts/antigravity/AG6_FOUNDATION_AUDIT.md
+agent-prompts/antigravity/README.md
+agent-prompts/codex/CX0_HANDOFF_AUDIT.md
+agent-prompts/codex/CX1_ASSISTANT_CONTROL.md
+agent-prompts/codex/CX2_ATTACK_PIPELINE.md
+agent-prompts/codex/CX3_DEFENSES_TOOLS.md
+agent-prompts/codex/CX4_PAIRED_EXPERIMENT.md
+agent-prompts/codex/CX5_EVALUATOR_METRICS.md
+agent-prompts/codex/CX6_BENCHMARK_RESEARCH.md
+agent-prompts/codex/CX7_FRONTEND_RESEARCH_WIRING.md
+agent-prompts/codex/CX8_FINAL_AUDIT.md
+agent-prompts/codex/README.md
+backend/.env.example
+backend/app/__init__.py
+backend/app/__pycache__/__init__.cpython-313.pyc
+backend/app/__pycache__/config.cpython-313.pyc
+backend/app/__pycache__/db.cpython-313.pyc
+backend/app/__pycache__/main.cpython-313.pyc
+backend/app/__pycache__/models.cpython-313.pyc
+backend/app/__pycache__/schemas.cpython-313.pyc
+backend/app/config.py
+backend/app/db.py
+backend/app/main.py
+backend/app/models.py
+backend/app/routers/__init__.py
+backend/app/routers/__pycache__/__init__.cpython-313.pyc
+backend/app/routers/__pycache__/chat.cpython-313.pyc
+backend/app/routers/__pycache__/health.cpython-313.pyc
+backend/app/routers/chat.py
+backend/app/routers/health.py
+backend/app/schemas.py
+backend/app/services/__init__.py
+backend/app/services/__pycache__/__init__.cpython-313.pyc
+backend/app/services/__pycache__/llm.cpython-313.pyc
+backend/app/services/llm.py
+backend/pytest.ini
+backend/requirements.txt
+backend/tests/__pycache__/test_db.cpython-313.pyc
+backend/tests/__pycache__/test_health.cpython-313.pyc
+backend/tests/test_db.py
+backend/tests/test_health.py
+design-reference/promptguard-logo.png
+docs/ARCHITECTURE.md
+docs/DESIGN_REFERENCE.md
+docs/FILE_MAP.md
+docs/HANDOFF_PROTOCOL.md
+docs/IMPLEMENTATION_PLAN.md
+docs/IMPLEMENTATION_STATUS.md
+docs/MODEL_STRATEGY.md
+docs/PROJECT_SPEC.md
+docs/RESEARCH_RULES.md
+docs/TOKEN_RULES.md
+frontend/.env.local.example
+frontend/.eslintrc.json
+frontend/app/benchmarks/page.tsx
+frontend/app/experiments/page.tsx
+frontend/app/globals.css
+frontend/app/layout.tsx
+frontend/app/page.tsx
+frontend/app/research/page.tsx
+frontend/components/AppShell.tsx
+frontend/components/AttackCard.tsx
+frontend/components/PromptComposer.tsx
+frontend/components/ResearchSteps.tsx
+frontend/components/SuggestionCard.tsx
+frontend/lib/api.ts
+frontend/lib/demo-data.ts
+frontend/lib/types.ts
+frontend/next-env.d.ts
+frontend/next.config.ts
+frontend/package.json
+frontend/postcss.config.js
+frontend/public/promptguard-logo.png
+frontend/tailwind.config.ts
+frontend/tsconfig.json
+scripts/run-backend.ps1
+scripts/run-dev.ps1
+scripts/run-frontend.ps1
+scripts/setup-backend.ps1
+scripts/setup-frontend.ps1
+scripts/test-model-routes.ps1
+scripts/verify.ps1

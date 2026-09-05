@@ -1,0 +1,27 @@
+PROMPTGUARD AI — OPTIMIZED AGENT WORKFLOW
+
+IMPORTANT: DO NOT give Antigravity one giant "finish everything" prompt.
+The project is intentionally divided into model-specific checkpoints so the user can switch models and balance quota.
+
+USER SETUP
+1. Extract ALL contents directly into the empty local PromptGuard-Ai folder.
+2. Open that SAME folder in Antigravity.
+3. Do not run a full setup script manually before AG1.
+4. Use PHASE_LAUNCHERS.md for the exact model + one-line launcher for each phase.
+5. After EVERY Antigravity phase, paste its exact reply back into ChatGPT before continuing.
+6. When Antigravity finishes AG6, open the SAME folder/repository in Codex.
+7. Then follow the Codex CX0-CX8 phases in PHASE_LAUNCHERS.md, again returning each agent reply to ChatGPT before the next phase.
+
+FIRST PHASE
+Model: GPT-OSS 120B
+Level: Medium
+Paste:
+Read `agent-prompts/antigravity/AG1_GIT_BOOTSTRAP.md` and execute that phase exactly. Do not continue to AG2.
+
+SECRETS
+When the backend phase reaches OmniRoute, put the real OmniRoute key locally in `backend/.env` yourself.
+Never paste the key into agent chat and never commit it.
+
+THE TWO NON-NEGOTIABLE OPTIMIZATIONS
+- Development agents: small bounded phases, minimum repo rereading, no unnecessary refactors.
+- PromptGuard runtime: minimum LLM calls/context/output while preserving functionality.
