@@ -13,8 +13,17 @@ export async function streamChat(
   });
 
   if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(detail || `Request failed with status ${response.status}`);
+    let errorMsg = `Request failed with status ${response.status}`;
+    try {
+      const data = await response.json();
+      if (data && typeof data === "object" && "detail" in data) {
+        errorMsg = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
+      }
+    } catch {
+      const text = await response.text().catch(() => "");
+      if (text) errorMsg = text;
+    }
+    throw new Error(errorMsg);
   }
 
   if (!response.body) {
@@ -25,9 +34,19 @@ export async function streamChat(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    onChunk(decoder.decode(value, { stream: true }));
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        const remaining = decoder.decode();
+        if (remaining) {
+          onChunk(remaining);
+        }
+        break;
+      }
+      onChunk(decoder.decode(value, { stream: true }));
+    }
+  } finally {
+    reader.releaseLock();
   }
 }

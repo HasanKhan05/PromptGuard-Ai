@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **AG2 complete — AG3 next**
-Last successful commit: **ddfdd89**
+Current phase: **AG4 complete — AG5 next**
+Last successful commit: **2936664**
 Current blocker: **none**
 
 ## Supplied starter
@@ -26,14 +26,14 @@ Current blocker: **none**
   - Model used: Gemini 3.7 Flash (Medium)
   - Commit: `426b86c`
   - Notes: Frontend dependencies installed cleanly, ESLint passes with 0 errors/warnings, Next.js production build succeeds, and dev server routes (/, /experiments, /benchmarks, /research) verified with HTTP 200.
-- [ ] AG3 Backend/FastAPI/OmniRoute verification
+- [x] AG3 Backend/FastAPI/OmniRoute verification
   - Model used: GPT-OSS 120B (Medium)
-  - Commit: pending
-  - Notes: Backend dependencies installed, tests passed, health endpoint OK. OMNIROUTE_API_KEY missing – awaiting user to add in backend/.env.
-- [ ] AG4 End-to-end streaming integration
-  - Model used:
-  - Commit:
-  - Notes:
+  - Commit: `6e5fd75`
+  - Notes: Backend dependencies installed, FastAPI starts, /health endpoint returns status ok, default OmniRoute route, Gemini route, and Pollinations route verified. Backend tests pass.
+- [x] AG4 End-to-end streaming integration
+  - Model used: Gemini 3.8 Flash (High)
+  - Commit: `2936664`
+  - Notes: Verified complete frontend -> FastAPI -> OmniRoute -> streamed response path with real model response. Error handling and AbortController cancellation verified. OmniRoute API key remains backend-only. Frontend build/lint and backend tests pass.
 - [ ] AG5 Minimal SQLite + targeted tests
   - Model used:
   - Commit:
@@ -93,7 +93,7 @@ Current blocker: **none**
 - [x] OmniRoute key configured locally only
 - [x] Gemini route works through backend
 - [x] Pollinations route works through backend
-- [ ] frontend displays real streamed response
+- [x] frontend displays real streamed response
 - [ ] SQLite initializes and minimal chat row stores
 - [x] backend tests pass
 

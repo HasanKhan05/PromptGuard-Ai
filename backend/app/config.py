@@ -32,7 +32,7 @@ class Settings:
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./promptguard.db")
     cors_origins: tuple[str, ...] = tuple(
         item.strip()
-        for item in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+        for item in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
         if item.strip()
     )
 
