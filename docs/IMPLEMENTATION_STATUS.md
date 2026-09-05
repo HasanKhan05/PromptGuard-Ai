@@ -4,7 +4,7 @@ This file is the durable handoff state between models/agents. Keep it concise. D
 
 ## Current state
 Current phase: **AG5 complete — AG6 next**
-Last successful commit: **6d9a9a9**
+Last successful commit: **17ef7f3**
 Current blocker: **none**
 
 ## Supplied starter
@@ -36,7 +36,7 @@ Current blocker: **none**
   - Notes: Verified complete frontend -> FastAPI -> OmniRoute -> streamed response path with real model response. Error handling and AbortController cancellation verified. OmniRoute API key remains backend-only. Frontend build/lint and backend tests pass.
 - [x] AG5 Minimal SQLite + targeted tests
   - Model used: Gemini 3.6 Flash (Medium)
-  - Commit: `6d9a9a9`
+  - Commit: `17ef7f3`
   - Notes: Database auto-initialization and chat_runs table creation verified. Targeted persistence tests written and passing in pytest. Database runtime files remain gitignored.
 - [ ] AG6 Foundation audit + Codex handoff
   - Model used:
