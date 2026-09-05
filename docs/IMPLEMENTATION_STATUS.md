@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **AG5 complete — AG6 next**
-Last successful commit: **17ef7f3**
+Current phase: **AG6 complete — CX0 next**
+Last successful commit: **e798411**
 Current blocker: **none**
 
 ## Supplied starter
@@ -38,10 +38,10 @@ Current blocker: **none**
   - Model used: Gemini 3.6 Flash (Medium)
   - Commit: `17ef7f3`
   - Notes: Database auto-initialization and chat_runs table creation verified. Targeted persistence tests written and passing in pytest. Database runtime files remain gitignored.
-- [ ] AG6 Foundation audit + Codex handoff
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] AG6 Foundation audit + Codex handoff
+  - Model used: Claude Sonnet 4.6 (Thinking)
+  - Commit: `e798411`
+  - Notes: Independent audit PASS. Git clean, no secrets tracked in history. Frontend build/lint pass, four routes intact, design unmodified. FastAPI /health and /api/chat functional, CORS correct for local dev, OmniRoute key backend-only. Default/Gemini/Pollinations routes verified live. SQLite chat_runs persistence confirmed. No banned dependencies or premature CX features found. Backend tests 3/3 pass. Ready for CX0.
 
 ## Codex phases
 - [ ] CX0 Handoff audit
