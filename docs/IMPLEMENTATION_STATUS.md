@@ -4,7 +4,7 @@ This file is the durable handoff state between models/agents. Keep it concise. D
 
 ## Current state
 Current phase: **AG4 complete — AG5 next**
-Last successful commit: **2936664**
+Last successful commit: **207d66a**
 Current blocker: **none**
 
 ## Supplied starter
@@ -32,7 +32,7 @@ Current blocker: **none**
   - Notes: Backend dependencies installed, FastAPI starts, /health endpoint returns status ok, default OmniRoute route, Gemini route, and Pollinations route verified. Backend tests pass.
 - [x] AG4 End-to-end streaming integration
   - Model used: Gemini 3.8 Flash (High)
-  - Commit: `2936664`
+  - Commit: `207d66a`
   - Notes: Verified complete frontend -> FastAPI -> OmniRoute -> streamed response path with real model response. Error handling and AbortController cancellation verified. OmniRoute API key remains backend-only. Frontend build/lint and backend tests pass.
 - [ ] AG5 Minimal SQLite + targeted tests
   - Model used:
