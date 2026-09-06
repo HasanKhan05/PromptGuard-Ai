@@ -7,6 +7,7 @@ After each phase:
 3. Agent stops and returns a short report.
 4. User copies the exact report to ChatGPT.
 5. ChatGPT reviews it, checks whether the next default model is still appropriate, and supplies the next launcher/model.
+All agents must follow `docs/HYBRID_EXECUTION_PLAN.md` for authoritative phase ownership and model schedule.
 
 Do not let Antigravity/Codex autonomously continue across phase boundaries because the user needs to switch model/effort and manage usage.
 

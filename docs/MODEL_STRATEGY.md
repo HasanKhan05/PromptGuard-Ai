@@ -39,6 +39,18 @@ Official references used to plan the Codex model allocation:
 - https://help.openai.com/en/articles/11369540
 - https://help.openai.com/en/articles/11481834-chatgpt-rate-card
 
+## Hybrid allocation (Antigravity ownership)
+| Phase | Owner | Model |
+|---|---|---|
+| CX1 | Antigravity | Gemini 3.7 Flash — Medium |
+| CX2 | Codex | GPT-5.6 Terra — High |
+| CX3 | Codex | GPT-5.6 Terra — High |
+| CX4 | Codex | GPT-5.6 Sol — High |
+| CX5 | Antigravity | Claude Sonnet 4.6 — Thinking |
+| CX6 | Antigravity | Gemini 3.6 Flash — Medium |
+| CX7 | Antigravity | Gemini 3.7 Flash — Medium |
+| CX8 | Antigravity | Claude Sonnet 4.6 — Thinking |
+
 ## Context-efficiency rules for both agents
 1. The user's launcher is one line; detailed instructions live in the repository.
 2. Phase files list exact docs/folders to inspect.

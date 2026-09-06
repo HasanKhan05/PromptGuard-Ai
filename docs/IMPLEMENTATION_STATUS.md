@@ -3,7 +3,7 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **AG6 complete — CX0 next**
+Current phase: **AG6 complete — hybrid execution plan adopted, next phase CX1 (Antigravity, Gemini 3.7 Flash)**
 Last successful commit: **e798411**
 Current blocker: **none**
 

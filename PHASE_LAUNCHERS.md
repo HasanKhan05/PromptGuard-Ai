@@ -61,8 +61,7 @@ Current official OpenAI availability for Plus/eligible paid Codex includes GPT-5
 | CX8 | Final scientific/security audit + full validation | **GPT-5.6 Sol** | **High** | Second and final Sol use; validate fairness and evidence, do not redesign. |
 
 ### Exact Codex launchers
-CX0:
-`Read agent-prompts/codex/CX0_HANDOFF_AUDIT.md and execute that phase exactly. Do not continue to CX1.`
+CX0: *Superseded by Antigravity AG6 audit – see `docs/HYBRID_EXECUTION_PLAN.md`*
 
 CX1:
 `Read agent-prompts/codex/CX1_ASSISTANT_CONTROL.md and execute that phase exactly. Do not continue to CX2.`
