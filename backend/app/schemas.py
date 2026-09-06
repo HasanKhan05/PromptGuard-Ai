@@ -30,6 +30,12 @@ class EligibilityStatus(str, Enum):
     NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
+class AttackDifficulty(str, Enum):
+    EASY = "easy"
+    MODERATE = "moderate"
+    SUBTLE = "subtle"
+
+
 class AttackEligibilityRequest(BaseModel):
     original_task: str = Field(min_length=1, max_length=20_000)
 
@@ -54,6 +60,7 @@ class AttackEligibilityResponse(BaseModel):
 class AttackGenerationRequest(BaseModel):
     original_task: str = Field(min_length=1, max_length=20_000)
     attack_family: AttackFamily
+    difficulty: AttackDifficulty = AttackDifficulty.MODERATE
 
 
 class AttackGenerationResult(BaseModel):

@@ -25,7 +25,7 @@ async def eligibility(payload: AttackEligibilityRequest) -> AttackEligibilityRes
 @router.post("/generate", response_model=AttackGenerationResult)
 async def generate(payload: AttackGenerationRequest) -> AttackGenerationResult:
     try:
-        return await generate_attack(payload.original_task, payload.attack_family)
+        return await generate_attack(payload.original_task, payload.attack_family, payload.difficulty)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except (AttackModelOutputError, APIError) as exc:

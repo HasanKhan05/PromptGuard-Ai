@@ -101,6 +101,10 @@ Current blocker: **none**
   - Owner: Antigravity
   - Notes: Fixed LLM evaluator truncation by introducing EVALUATOR_MODEL=pol/gpt-5.4. Fixed tool misuse evaluator semantics by correctly using authorize_tool_request to check if the attempted tool was actually unauthorized rather than merely authorized. 8 pilot experiments re-evaluated successfully. Benchmark metrics report 0.0% ASR exactly as expected.
 
+- [x] Final Attack-Generation Methodology Repair
+  - Owner: Antigravity
+  - Notes: Replaced appended instruction generation with full-prompt generation. Added difficulty control. Added existing-but-forbidden resources for tooling. Validated 8 pilot cases successfully.
+
 ## Foundation verification checklist
 - [x] Git `main` initialized
 - [x] Private GitHub repo connected/pushed
