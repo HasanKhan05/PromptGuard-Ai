@@ -69,7 +69,7 @@ Current blocker: **none**
 - [x] CX6 Benchmarks + research backend
   - Owner: Antigravity
   - Model used: Gemini 3.6 Flash (Medium)
-  - Commit: TBD (recorded after push)
+  - Commit: `74eef48`
   - Notes: Built deterministic backend benchmark aggregation in `app/services/benchmarks.py`. ZERO LLM calls used (0 OmniRoute calls for aggregation/metrics). Condition-split ASR, canary raw/visible leakage, tool attempted/executed, utility, operational (latency, tokens, cost) aggregated directly from persisted `experiment_runs` and `evaluation_json`. Denominators strictly exclude unevaluated/null/failed runs; sample counts accompany all rates. Added endpoints `GET /api/benchmarks`, `GET /api/research`, `GET /api/runs/{id}`, `GET /api/experiments/{id}`. 12 targeted benchmark tests pass; 56/56 total backend tests pass. No frontend integration or CX7 work added.
 - [ ] CX7 Frontend research wiring
   - Model used:
