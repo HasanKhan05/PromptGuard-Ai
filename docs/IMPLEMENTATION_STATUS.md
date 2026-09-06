@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **CX3 complete — CX4 next**
-Last successful commit: **CX3 commit recorded below**
+Current phase: **CX4 complete — CX5 next**
+Last successful commit: **CX4 commit recorded below**
 Current blocker: **none**
 
 ## Supplied starter
@@ -57,10 +57,10 @@ Current blocker: **none**
   - Model used: GPT-5.6 Terra (High)
   - Commit: recorded in the CX3 phase commit
   - Notes: Added deterministic fixed defense mapping, narrow direct-override input screening, fake-canary output redaction that preserves raw output, authorized local read-only fixture tools, and explicit instruction–data message separation. Normal scope guard/chat behavior remains separate. No experiments, evidence schema, RAG, or frontend wiring added.
-- [ ] CX4 Paired experiment engine + evidence schema
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] CX4 Paired experiment engine + evidence schema
+  - Model used: Codex (CX4 phase)
+  - Commit: recorded in the CX4 phase commit
+  - Notes: Added `POST /api/experiments/run` with one immutable pair specification, exact pinned-model enforcement, one baseline call plus one defended call, and family-derived CX3 defense application. Added a single SQLite `experiment_runs` evidence table retaining reproducibility settings, raw/visible outputs, defense/tool evidence, actual model metadata, latency, optional usage/cost, and explicit completed/partial/failed state. No attack regeneration, evaluator, metrics, benchmarks, RAG, or frontend wiring added.
 - [ ] CX5 Evaluator + metrics
   - Model used:
   - Commit:

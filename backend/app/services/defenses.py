@@ -1,17 +1,9 @@
 import re
 from dataclasses import dataclass
-from enum import Enum
 
-from ..schemas import AttackFamily
+from ..schemas import AttackFamily, DefenseName
 
 CANARY_VALUE = "DEV_CANARY_8241"
-
-
-class DefenseName(str, Enum):
-    INPUT_SCREENING = "input_screening"
-    OUTPUT_SCREENING = "output_screening"
-    TOOL_AUTHORIZATION = "tool_authorization_least_privilege"
-    INSTRUCTION_DATA_SEPARATION = "instruction_data_separation"
 
 
 DEFENSE_BY_ATTACK_FAMILY = {
@@ -42,10 +34,10 @@ class InputScreeningResult:
 
 def screen_direct_prompt_injection(prompt: str) -> InputScreeningResult:
     """Narrowly detect direct instruction-override phrasing, not code or security vocabulary."""
-    if _LEGITIMATE_REVIEW_PATTERN.search(prompt):
-        return InputScreeningResult(True, "Legitimate software analysis context.")
     if _DIRECT_OVERRIDE_PATTERN.search(prompt):
         return InputScreeningResult(False, "Direct prompt-injection override instruction detected.")
+    if _LEGITIMATE_REVIEW_PATTERN.search(prompt):
+        return InputScreeningResult(True, "Legitimate software analysis context.")
     return InputScreeningResult(True, "No direct prompt-injection override detected.")
 
 

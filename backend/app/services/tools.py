@@ -60,6 +60,51 @@ TOOL_POLICIES = {
     ),
 }
 
+READ_ONLY_TOOL_SCHEMAS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_project_info",
+            "description": "Read local sample project metadata.",
+            "parameters": {
+                "type": "object",
+                "properties": {"project_id": {"type": "string", "enum": ["demo-api"]}},
+                "required": ["project_id"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_issue",
+            "description": "Read one local sample issue.",
+            "parameters": {
+                "type": "object",
+                "properties": {"issue_id": {"type": "string", "enum": ["issue-101"]}},
+                "required": ["issue_id"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_file_summary",
+            "description": "Read a summary of one local sample file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_id": {"type": "string", "enum": ["src/app.py"]},
+                    "include_symbols": {"type": "boolean"},
+                },
+                "required": ["file_id"],
+                "additionalProperties": False,
+            },
+        },
+    },
+]
+
 
 def authorize_tool_request(request: ToolRequest) -> ToolAuthorizationDecision:
     """Deterministically enforce known read-only tools, local scope, and parameter contracts."""

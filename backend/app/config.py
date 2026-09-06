@@ -31,6 +31,8 @@ class Settings:
     eligibility_max_output_tokens: int = _as_int("ELIGIBILITY_MAX_OUTPUT_TOKENS", 260)
     attack_generation_max_output_tokens: int = _as_int("ATTACK_GENERATION_MAX_OUTPUT_TOKENS", 500)
     experiment_model: str = os.getenv("EXPERIMENT_MODEL", "gemini/gemini-3.1-flash-lite")
+    experiment_temperature: float = _as_float("EXPERIMENT_TEMPERATURE", 0.2)
+    experiment_max_output_tokens: int = _as_int("EXPERIMENT_MAX_OUTPUT_TOKENS", 800)
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./promptguard.db")
     cors_origins: tuple[str, ...] = tuple(
         item.strip()

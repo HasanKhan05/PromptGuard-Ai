@@ -7,6 +7,7 @@ from .config import get_settings
 from .db import init_db
 from .routers.attacks import router as attacks_router
 from .routers.chat import router as chat_router
+from .routers.experiments import router as experiments_router
 from .routers.health import router as health_router
 
 
@@ -36,3 +37,4 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(chat_router)
 app.include_router(attacks_router)
+app.include_router(experiments_router)

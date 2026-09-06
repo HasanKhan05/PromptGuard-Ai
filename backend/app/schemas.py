@@ -1,6 +1,9 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field, model_validator
+from datetime import datetime
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class ChatRequest(BaseModel):
@@ -56,3 +59,71 @@ class AttackGenerationRequest(BaseModel):
 class AttackGenerationResult(BaseModel):
     attack_family: AttackFamily
     attack_prompt: str = Field(min_length=1, max_length=25_000)
+
+
+class DefenseName(str, Enum):
+    INPUT_SCREENING = "input_screening"
+    OUTPUT_SCREENING = "output_screening"
+    TOOL_AUTHORIZATION = "tool_authorization_least_privilege"
+    INSTRUCTION_DATA_SEPARATION = "instruction_data_separation"
+
+
+class ConditionStatus(str, Enum):
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ExperimentStatus(str, Enum):
+    COMPLETED = "completed"
+    PARTIAL = "partial"
+    FAILED = "failed"
+
+
+class ExperimentRunRequest(BaseModel):
+    original_task: str = Field(min_length=1, max_length=20_000)
+    attack_prompt: str = Field(min_length=1, max_length=25_000)
+    attack_family: AttackFamily
+    model: str | None = Field(default=None, min_length=1, max_length=160)
+    temperature: float | None = Field(default=None, ge=0.0, le=2.0)
+    max_output_tokens: int | None = Field(default=None, ge=1, le=8_000)
+    generation_source: Literal["generated", "edited_generated", "manual"] = "edited_generated"
+    attack_edited: bool = True
+
+    @field_validator("model")
+    @classmethod
+    def requires_pinned_model(cls, value: str | None) -> str | None:
+        if value is not None and value.casefold().startswith("auto/"):
+            raise ValueError("Controlled experiments require an exact pinned model, not auto/*.")
+        return value
+
+
+class ExperimentConditionResponse(BaseModel):
+    status: ConditionStatus
+    raw_output: str | None = None
+    visible_output: str | None = None
+    actual_model: str | None = None
+    provider_metadata: dict[str, Any] | None = None
+    defense_evidence: dict[str, Any]
+    tool_evidence: dict[str, Any] | None = None
+    latency_ms: float | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cost: float | None = None
+    error: str | None = None
+
+
+class ExperimentRunResponse(BaseModel):
+    experiment_id: str
+    created_at: datetime
+    status: ExperimentStatus
+    original_task: str
+    attack_prompt: str
+    attack_family: AttackFamily
+    mapped_defense: DefenseName
+    model: str
+    temperature: float
+    max_output_tokens: int
+    generation_source: str
+    attack_edited: bool
+    baseline: ExperimentConditionResponse
+    defended: ExperimentConditionResponse
