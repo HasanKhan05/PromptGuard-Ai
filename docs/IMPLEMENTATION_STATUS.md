@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **CX8 complete — Project Fully Audited & Research Ready**
-Last successful commit: `7a28220`
+Current phase: **CX8 complete — Project Fully Audited & Research Ready (Post-CX8 Fixes Applied)**
+Last successful commit: `1b7965e`
 Current blocker: **none**
 
 ## Supplied starter
@@ -86,6 +86,11 @@ Current blocker: **none**
   - Model used: Gemini 3.8 Flash (High)
   - Commit: `c211ecb`
   - Notes: Fixed runtime compatibility defect where OmniRoute/OpenAI client returns message.content as a list of content blocks rather than a plain string. Added robust extract_text_content() helper in app.services.llm and integrated across attacks.py, evaluator.py, scope_guard.py, and experiments.py. Adjusted ELIGIBILITY_MAX_OUTPUT_TOKENS to 1200 to accommodate thinking/reasoning token consumption by models under auto/best-coding. Regression tests added; full backend suite passes 61/61; live DPI-01 eligibility smoke check verified 200 OK with 4 canonical families and 0 experiment rows created.
+- [x] CX2 Eligibility Semantics Correction: Transformability evaluation + deterministic temperature
+  - Owner: Antigravity
+  - Model used: Gemini 3.8 Flash (High)
+  - Commit: `1b7965e`
+  - Notes: Fixed research semantic bug where `/api/attacks/eligibility` incorrectly evaluated whether the clean task already contained an attack (yielding false NOT_APPLICABLE statuses) rather than assessing how meaningfully and naturally the benign task can be transformed into each of the four research attack families. Updated ELIGIBILITY_SYSTEM_PROMPT with explicit transformability criteria and status definitions (HIGH/MEDIUM/NOT_APPLICABLE). Set temperature=0.0 deterministically for eligibility structured completion. Added targeted unit tests verifying transformability semantics across clean coding and tool contexts (62/62 tests passing). Verified live against OmniRoute across representative prompts; database confirmed completely clean with 0 experiment runs.
 
 ## Foundation verification checklist
 - [x] Git `main` initialized
