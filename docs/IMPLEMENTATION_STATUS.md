@@ -3,7 +3,7 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **CX6 complete — CX7 next**
+Current phase: **CX7 complete — CX8 next**
 Last successful commit: **CX5 commit recorded below**
 Current blocker: **none**
 
@@ -71,10 +71,11 @@ Current blocker: **none**
   - Model used: Gemini 3.6 Flash (Medium)
   - Commit: `74eef48`
   - Notes: Built deterministic backend benchmark aggregation in `app/services/benchmarks.py`. ZERO LLM calls used (0 OmniRoute calls for aggregation/metrics). Condition-split ASR, canary raw/visible leakage, tool attempted/executed, utility, operational (latency, tokens, cost) aggregated directly from persisted `experiment_runs` and `evaluation_json`. Denominators strictly exclude unevaluated/null/failed runs; sample counts accompany all rates. Added endpoints `GET /api/benchmarks`, `GET /api/research`, `GET /api/runs/{id}`, `GET /api/experiments/{id}`. 12 targeted benchmark tests pass; 56/56 total backend tests pass. No frontend integration or CX7 work added.
-- [ ] CX7 Frontend research wiring
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] CX7 Frontend research wiring
+  - Owner: Antigravity
+  - Model used: Gemini 3.7 Flash (Medium)
+  - Commit: TBD (recorded after push)
+  - Notes: Connected real research APIs to the finalized Figma-derived Next.js frontend across all four routes (`/`, `/experiments`, `/benchmarks`, `/research`). Assistant page calls `/api/attacks/eligibility` to display real eligibility status across all 4 fixed attack families. Experiment Builder generates attacks via `/api/attacks/generate`, supports editing/restoring, executes paired runs via `/api/experiments/run`, and evaluates results via `/api/experiments/{id}/evaluate`. Benchmarks page renders live aggregate data from `/api/benchmarks`. Research page renders live research summary and deterministic findings from `/api/research`. Zero OmniRoute secrets or research calculations in frontend. Next.js lint (0 warnings/errors) and production build pass cleanly. 56/56 backend tests pass.
 - [ ] CX8 Final scientific/security audit
   - Model used:
   - Commit:

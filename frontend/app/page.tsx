@@ -7,8 +7,8 @@ import { PromptComposer } from "@/components/PromptComposer";
 import { SuggestionCard } from "@/components/SuggestionCard";
 import { ResearchSteps } from "@/components/ResearchSteps";
 import { AttackCard } from "@/components/AttackCard";
-import { demoEligibility, suggestions } from "@/lib/demo-data";
-import { streamChat } from "@/lib/api";
+import { suggestions } from "@/lib/demo-data";
+import { fetchAttackEligibility, streamChat } from "@/lib/api";
 
 export default function AssistantPage() {
   const [prompt, setPrompt] = useState("");
@@ -17,12 +17,15 @@ export default function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showEligibility, setShowEligibility] = useState(false);
+  const [eligibilityLoading, setEligibilityLoading] = useState(false);
+  const [eligibilityError, setEligibilityError] = useState("");
+  const [eligibilityResults, setEligibilityResults] = useState<import("@/lib/types").AttackEligibilityItem[] | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const eligibleCount = useMemo(
-    () => demoEligibility.filter((item) => item.level !== "not_applicable").length,
-    [],
-  );
+  const eligibleCount = useMemo(() => {
+    if (!eligibilityResults) return 0;
+    return eligibilityResults.filter((item) => item.status !== "NOT_APPLICABLE").length;
+  }, [eligibilityResults]);
 
   async function submit() {
     const value = prompt.trim();
@@ -36,6 +39,8 @@ export default function AssistantPage() {
     setResponse("");
     setError("");
     setShowEligibility(false);
+    setEligibilityResults(null);
+    setEligibilityError("");
     setLoading(true);
 
     try {
@@ -49,6 +54,22 @@ export default function AssistantPage() {
     }
   }
 
+  async function handleExploreAttacks() {
+    setShowEligibility(true);
+    if (eligibilityResults || eligibilityLoading || !submittedPrompt) return;
+
+    setEligibilityLoading(true);
+    setEligibilityError("");
+    try {
+      const data = await fetchAttackEligibility(submittedPrompt);
+      setEligibilityResults(data.results);
+    } catch (err) {
+      setEligibilityError(err instanceof Error ? err.message : "Failed to analyze attack eligibility.");
+    } finally {
+      setEligibilityLoading(false);
+    }
+  }
+
   function reset() {
     abortRef.current?.abort();
     setPrompt("");
@@ -56,6 +77,8 @@ export default function AssistantPage() {
     setResponse("");
     setError("");
     setShowEligibility(false);
+    setEligibilityResults(null);
+    setEligibilityError("");
     setLoading(false);
   }
 
@@ -85,9 +108,15 @@ export default function AssistantPage() {
           </div>
           <div className="research-strip">
             <span className="research-badge">Research mode</span>
-            <span>{loading ? "Finish the live response before exploring attacks." : `UI preview shows ${eligibleCount} relevant transformations for this example.`}</span>
-            <button onClick={() => setShowEligibility(true)} disabled={loading || !!error}>
-              Explore attacks <ArrowRight size={13} />
+            <span>
+              {loading
+                ? "Finish the live response before exploring attacks."
+                : eligibilityResults
+                ? `${eligibleCount} relevant attack transformations identified for this prompt.`
+                : "Explore how this prompt can be transformed into 4 research attack families."}
+            </span>
+            <button onClick={handleExploreAttacks} disabled={loading || !!error || eligibilityLoading}>
+              {eligibilityLoading ? "Analyzing…" : <>Explore attacks <ArrowRight size={13} /></>}
             </button>
           </div>
         </section>
@@ -97,13 +126,21 @@ export default function AssistantPage() {
             <div className="section-heading-row">
               <div>
                 <h2>Attack eligibility</h2>
-                <p>This layout is ready. Real eligibility logic is intentionally reserved for the Codex research phase.</p>
+                <p>One compact analysis evaluates applicability across all four fixed attack families.</p>
               </div>
-              <span className="pill preview">UI PREVIEW</span>
+              <span className="pill preview">LIVE ANALYSIS</span>
             </div>
-            <div className="attack-grid">
-              {demoEligibility.map((item) => <AttackCard item={item} key={item.id} />)}
-            </div>
+            {eligibilityLoading ? (
+              <div className="note" style={{ padding: "1.5rem" }}>Analyzing attack eligibility with PromptGuard backend…</div>
+            ) : eligibilityError ? (
+              <p className="error-text" style={{ padding: "1rem" }}>{eligibilityError}</p>
+            ) : eligibilityResults ? (
+              <div className="attack-grid">
+                {eligibilityResults.map((item) => (
+                  <AttackCard item={item} task={submittedPrompt} key={item.family} />
+                ))}
+              </div>
+            ) : null}
           </section>
         ) : null}
       </div>
