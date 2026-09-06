@@ -24,7 +24,7 @@ from .defenses import (
     screen_direct_prompt_injection,
     screen_output_for_canary,
 )
-from .llm import SYSTEM_PROMPT, get_client
+from .llm import SYSTEM_PROMPT, extract_text_content, get_client
 from .tools import READ_ONLY_TOOL_SCHEMAS, ToolRequest, execute_read_only_tool
 
 SYSTEM_PROMPT_VERSION = "cx1-v1"
@@ -205,7 +205,7 @@ async def _run_condition(client, spec: ExperimentSpec, defense_enabled: bool):
         response = await client.chat.completions.create(**kwargs)
         latency_ms = (perf_counter() - started) * 1000
         message = response.choices[0].message
-        raw_output = message.content or ""
+        raw_output = extract_text_content(message.content) or ""
         visible_output = raw_output
         requested_tool = _tool_request(message)
         tool_evidence = _tool_evidence(

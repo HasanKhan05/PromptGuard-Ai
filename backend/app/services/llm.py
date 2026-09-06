@@ -1,6 +1,38 @@
+from typing import Any
 from openai import AsyncOpenAI
 
 from ..config import get_settings
+
+
+def extract_text_content(content: Any) -> str | None:
+    """Normalize model message content to a plain string.
+
+    Supports:
+    - str: returned as-is
+    - None: returned as None
+    - list of content blocks: concatenates text across all blocks
+      (supporting dict with 'text' key, SDK objects with .text or .content, or str items)
+    - other: converted to str
+    """
+    if content is None:
+        return None
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                parts.append(str(item.get("text", "")))
+            elif hasattr(item, "text"):
+                parts.append(str(getattr(item, "text", "")))
+            elif hasattr(item, "content"):
+                parts.append(str(getattr(item, "content", "")))
+            else:
+                parts.append(str(item))
+        return "".join(parts)
+    return str(content)
 
 SYSTEM_PROMPT = (
     "You are PromptGuard Ai, a dedicated software development assistant. "

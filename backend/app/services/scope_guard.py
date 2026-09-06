@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from openai import AsyncOpenAI
 
 from ..config import get_settings
+from .llm import extract_text_content
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +188,8 @@ async def classify_scope_llm(prompt: str) -> ScopeDecision:
             temperature=0.0,
             max_tokens=40,
         )
-        content = response.choices[0].message.content or "{}"
+        raw_content = response.choices[0].message.content if response.choices else None
+        content = extract_text_content(raw_content) or "{}"
         match = re.search(r"\{.*\}", content, re.DOTALL)
         if match:
             parsed = json.loads(match.group(0))

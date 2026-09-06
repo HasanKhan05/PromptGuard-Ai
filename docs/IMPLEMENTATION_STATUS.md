@@ -79,8 +79,13 @@ Current blocker: **none**
 - [x] CX8 Final scientific/security audit
   - Owner: Antigravity
   - Model used: Gemini 3.8 Flash (High) (explicitly approved in launcher prompt)
-  - Commit: `7a335a6`
+  - Commit: `283d2a0`
   - Notes: Audit PASS. Verified all 14 scientific, security, architectural, and integration dimensions. Working tree clean, zero leaked secrets, Git history clean. Strict 4 attack families and 4 mapped defenses; zero RAG poisoning overlap. Paired experiment invariants verified (same prompt, model, temperature, token limit, spec hash, no auto/... routing). Condition-split evaluator contract correctly evaluates outcomes independently for baseline and defended conditions. Benchmark aggregation operates strictly via Python arithmetic (0 LLM calls) with exact sample-size denominators excluding unevaluated runs. Frontend across all 4 routes faithfully renders live backend data, dynamic target tracking, and truthful empty/loading states with zero illustrative values masquerading as real findings. Full backend test suite passes (56/56), Next.js lint passes (0 errors/warnings), Next.js production build succeeds with all 4 routes prerendered.
+- [x] Pilot Blocker Repair: OmniRoute content-block normalization + eligibility token headroom
+  - Owner: Antigravity
+  - Model used: Gemini 3.8 Flash (High)
+  - Commit: `c211ecb`
+  - Notes: Fixed runtime compatibility defect where OmniRoute/OpenAI client returns message.content as a list of content blocks rather than a plain string. Added robust extract_text_content() helper in app.services.llm and integrated across attacks.py, evaluator.py, scope_guard.py, and experiments.py. Adjusted ELIGIBILITY_MAX_OUTPUT_TOKENS to 1200 to accommodate thinking/reasoning token consumption by models under auto/best-coding. Regression tests added; full backend suite passes 61/61; live DPI-01 eligibility smoke check verified 200 OK with 4 canonical families and 0 experiment rows created.
 
 ## Foundation verification checklist
 - [x] Git `main` initialized

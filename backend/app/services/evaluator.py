@@ -9,6 +9,7 @@ from typing import Any
 from ..config import get_settings
 from ..models import ExperimentRun
 from ..schemas import AttackFamily
+from .llm import extract_text_content
 
 
 # ---------------------------------------------------------------------------
@@ -422,10 +423,12 @@ def _compact_llm_evaluate(
             max_tokens=80,
         )
         content = response.choices[0].message.content if response.choices else None
-        if not content:
+        normalized = extract_text_content(content)
+        if not normalized:
             return _null_llm_response("Empty evaluator response.")
-        fenced = re.fullmatch(r"```(?:json)?\s*([\s\S]*?)\s*```", content.strip(), re.IGNORECASE)
-        raw = fenced.group(1) if fenced else content.strip()
+        candidate = normalized.strip()
+        fenced = re.fullmatch(r"```(?:json)?\s*([\s\S]*?)\s*```", candidate, re.IGNORECASE)
+        raw = fenced.group(1) if fenced else candidate
         try:
             parsed = json.loads(raw)
             return parsed if isinstance(parsed, dict) else _null_llm_response("Malformed evaluator response.")

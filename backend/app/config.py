@@ -28,7 +28,7 @@ class Settings:
     normal_assistant_model: str = os.getenv("NORMAL_ASSISTANT_MODEL", "auto/best-coding")
     normal_max_output_tokens: int = _as_int("NORMAL_MAX_OUTPUT_TOKENS", 1200)
     normal_temperature: float = _as_float("NORMAL_TEMPERATURE", 0.2)
-    eligibility_max_output_tokens: int = _as_int("ELIGIBILITY_MAX_OUTPUT_TOKENS", 260)
+    eligibility_max_output_tokens: int = _as_int("ELIGIBILITY_MAX_OUTPUT_TOKENS", 1200)
     attack_generation_max_output_tokens: int = _as_int("ATTACK_GENERATION_MAX_OUTPUT_TOKENS", 500)
     experiment_model: str = os.getenv("EXPERIMENT_MODEL", "gemini/gemini-3.1-flash-lite")
     experiment_temperature: float = _as_float("EXPERIMENT_TEMPERATURE", 0.2)

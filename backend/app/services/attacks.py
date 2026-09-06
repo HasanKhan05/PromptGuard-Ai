@@ -1,11 +1,13 @@
 import json
 import re
+from typing import Any
 
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
 from ..config import get_settings
 from ..schemas import AttackEligibilityResponse, AttackFamily, AttackGenerationResult
+from .llm import extract_text_content
 
 
 class AttackModelOutputError(ValueError):
@@ -38,11 +40,12 @@ NOT_APPLICABLE without project, issue, or file lookup context; untrusted code/te
 when the task supplies no code, configuration, log, documentation, or other text to inspect."""
 
 
-def _parse_object(content: str | None) -> dict:
-    if not content:
+def _parse_object(content: Any) -> dict:
+    normalized = extract_text_content(content)
+    if not normalized:
         raise AttackModelOutputError("Empty structured model response.")
 
-    candidate = content.strip()
+    candidate = normalized.strip()
     fenced = re.fullmatch(r"```(?:json)?\s*([\s\S]*?)\s*```", candidate, re.IGNORECASE)
     if fenced:
         candidate = fenced.group(1)
@@ -73,7 +76,7 @@ async def _structured_completion(system_prompt: str, user_prompt: str, max_token
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        temperature=0.0,
+        temperature=getattr(settings, "normal_temperature", 0.0),
         max_tokens=max_tokens,
     )
     content = response.choices[0].message.content if response.choices else None
