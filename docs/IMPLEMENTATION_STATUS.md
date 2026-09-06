@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **CX1 complete — CX2 next**
-Last successful commit: **2dece79**
+Current phase: **CX2 complete — CX3 next**
+Last successful commit: **CX2 commit recorded below**
 Current blocker: **none**
 
 ## Supplied starter
@@ -49,10 +49,10 @@ Current blocker: **none**
   - Model used: Gemini 3.7 Flash (Medium)
   - Commit: `f43628d`
   - Notes: Finalized Software Development Assistant role with compact system prompt. Implemented deterministic-first application scope guard supporting software tasks across any domain (e.g. building car price scraper/API) and legitimate security/code questions while rejecting non-software requests without LLM overhead. Single compact LLM classifier fallback for ambiguous prompts with bounded tokens. Verified streaming, headers, refusal response, SQLite storage, and 10 backend tests.
-- [ ] CX2 Attack eligibility + generation
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] CX2 Attack eligibility + generation
+  - Model used: GPT-5.6 Terra (High)
+  - Commit: recorded in the CX2 phase commit
+  - Notes: Added strict four-family eligibility and selected-family generation APIs. Each endpoint makes one compact structured OmniRoute call; generation deterministically retains the original developer task. Mocked tests cover family/status schema enforcement, malformed output, call counts, unsupported-family rejection, task preservation, and no defense response path. No defenses, experiments, RAG, or frontend research wiring added.
 - [ ] CX3 Four defenses + harmless tools
   - Model used:
   - Commit:
