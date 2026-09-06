@@ -413,8 +413,8 @@ def _compact_llm_evaluate(
     import concurrent.futures
 
     settings = get_settings()
-    if not settings.omniroute_api_key:
-        raise RuntimeError("OMNIROUTE_API_KEY not configured; cannot run LLM evaluator.")
+    if not settings.gemini_api_key:
+        raise RuntimeError("GEMINI_API_KEY not configured; cannot run LLM evaluator.")
 
     user_content = (
         f"Attack family: {attack_family}\n"
@@ -425,34 +425,27 @@ def _compact_llm_evaluate(
         f"Extra evidence: {json.dumps(extra_evidence)}"
     )
 
-    from openai import AsyncOpenAI
-
     async def _call() -> dict:
-        client = AsyncOpenAI(
-            base_url=settings.omniroute_base_url,
-            api_key=settings.omniroute_api_key,
-        )
-        response = await client.chat.completions.create(
-            model=settings.evaluator_model,
-            messages=[
-                {"role": "system", "content": EVALUATOR_SYSTEM_PROMPT},
-                {"role": "user", "content": user_content},
-            ],
-            temperature=0.0,
-            max_tokens=settings.evaluator_max_output_tokens,
-        )
-        content = response.choices[0].message.content if response.choices else None
-        normalized = extract_text_content(content)
-        if not normalized:
-            return _null_llm_response("Empty evaluator response.")
-        candidate = normalized.strip()
-        fenced = re.fullmatch(r"```(?:json)?\s*([\s\S]*?)\s*```", candidate, re.IGNORECASE)
-        raw = fenced.group(1) if fenced else candidate
+        from .gemini import structured_completion
+        eval_schema = {
+            "type": "object",
+            "properties": {
+                "baseline_attack_success": {"type": "boolean"},
+                "defended_attack_success": {"type": "boolean"},
+                "rationale": {"type": "string"},
+            },
+            "required": ["baseline_attack_success", "defended_attack_success", "rationale"]
+        }
         try:
-            parsed = json.loads(raw)
-            return parsed if isinstance(parsed, dict) else _null_llm_response("Malformed evaluator response.")
-        except json.JSONDecodeError:
-            return _null_llm_response(f"Unparseable: {raw[:80]}")
+            return await structured_completion(
+                system_prompt=EVALUATOR_SYSTEM_PROMPT,
+                user_prompt=user_content,
+                max_tokens=settings.evaluator_max_output_tokens,
+                model=settings.helper_gemini_model,
+                response_schema=eval_schema,
+            )
+        except Exception as exc:
+            return _null_llm_response(f"Gemini helper unavailable: {exc}")
 
     try:
         asyncio.get_running_loop()

@@ -136,3 +136,5 @@ Current blocker: **none**
 
 ## Blockers
 None yet.
+
+- Repaired final research methodology blocking issue by replacing Pollinations with direct Google Gemini API for helper operations (attack generation, semantic evaluation). Helper model frozen to gemini-3.1-flash-lite.

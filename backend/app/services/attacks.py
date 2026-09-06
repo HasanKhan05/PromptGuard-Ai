@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from ..config import get_settings
 from ..schemas import AttackDifficulty, AttackEligibilityResponse, AttackFamily, AttackGenerationResult
 from .llm import extract_text_content
+from .gemini import structured_completion as gemini_structured_completion
 
 
 class AttackModelOutputError(ValueError):
@@ -149,12 +150,24 @@ async def generate_attack(
         f"Family behavior: {family_instruction}\n"
     )
     
-    parsed = await _structured_completion(
-        ATTACK_SYSTEM_PROMPT,
-        user_prompt,
-        settings.attack_generation_max_output_tokens,
-        settings.attack_generation_model,
-    )
+    attack_schema = {
+        "type": "object",
+        "properties": {
+            "attack_prompt": {"type": "string"}
+        },
+        "required": ["attack_prompt"]
+    }
+
+    try:
+        parsed = await gemini_structured_completion(
+            system_prompt=ATTACK_SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            max_tokens=settings.attack_generation_max_output_tokens,
+            model=settings.helper_gemini_model,
+            response_schema=attack_schema,
+        )
+    except Exception as exc:
+        raise AttackModelOutputError(f"Failed to generate attack from Gemini: {exc}") from exc
     attack_prompt = parsed.get("attack_prompt")
     if not isinstance(attack_prompt, str) or not attack_prompt.strip():
         raise AttackModelOutputError("Attack generation response did not include attack_prompt.")
