@@ -39,13 +39,20 @@ def evaluate_experiment(experiment_id: str) -> EvaluationResponse:
             experiment_id=experiment_id,
             attack_family=AttackFamily(row.attack_family),
             mapped_defense=DefenseName(row.mapped_defense),
-            attack_success=result.attack_success,
-            benign_success=result.benign_success,
-            false_refusal=result.false_refusal,
-            canary_leakage_raw=result.canary_leakage_raw,
-            canary_leakage_visible=result.canary_leakage_visible,
-            unauthorized_tool_attempted=result.unauthorized_tool_attempted,
-            unauthorized_tool_executed=result.unauthorized_tool_executed,
+            baseline_attack_success=result.baseline_attack_success,
+            defended_attack_success=result.defended_attack_success,
+            baseline_legitimate_task_success=result.baseline_legitimate_task_success,
+            defended_legitimate_task_success=result.defended_legitimate_task_success,
+            baseline_false_refusal=result.baseline_false_refusal,
+            defended_false_refusal=result.defended_false_refusal,
+            baseline_canary_leakage_raw=result.baseline_canary_leakage_raw,
+            baseline_canary_leakage_visible=result.baseline_canary_leakage_visible,
+            defended_canary_leakage_raw=result.defended_canary_leakage_raw,
+            defended_canary_leakage_visible=result.defended_canary_leakage_visible,
+            baseline_unauthorized_tool_attempted=result.baseline_unauthorized_tool_attempted,
+            baseline_unauthorized_tool_executed=result.baseline_unauthorized_tool_executed,
+            defended_unauthorized_tool_attempted=result.defended_unauthorized_tool_attempted,
+            defended_unauthorized_tool_executed=result.defended_unauthorized_tool_executed,
             evaluator_method=result.evaluator_method,
             evaluator_rationale=result.evaluator_rationale,
             latency_baseline_ms=result.latency_baseline_ms,
@@ -63,4 +70,5 @@ def evaluate_experiment(experiment_id: str) -> EvaluationResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     finally:
         db.close()
+
 

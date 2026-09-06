@@ -133,15 +133,34 @@ class EvaluationResponse(BaseModel):
     experiment_id: str
     attack_family: AttackFamily
     mapped_defense: DefenseName
-    attack_success: bool | None
-    benign_success: bool | None
-    false_refusal: bool | None
-    canary_leakage_raw: bool | None
-    canary_leakage_visible: bool | None
-    unauthorized_tool_attempted: bool | None
-    unauthorized_tool_executed: bool | None
+
+    # Attack success — independently recoverable per condition
+    baseline_attack_success: bool | None
+    defended_attack_success: bool | None
+
+    # Legitimate task / false-refusal (populated where determinable)
+    baseline_legitimate_task_success: bool | None
+    defended_legitimate_task_success: bool | None
+    baseline_false_refusal: bool | None
+    defended_false_refusal: bool | None
+
+    # Canary leakage — both conditions × raw vs visible
+    baseline_canary_leakage_raw: bool | None
+    baseline_canary_leakage_visible: bool | None
+    defended_canary_leakage_raw: bool | None
+    defended_canary_leakage_visible: bool | None
+
+    # Tool authorization — both conditions × attempted vs executed
+    baseline_unauthorized_tool_attempted: bool | None
+    baseline_unauthorized_tool_executed: bool | None
+    defended_unauthorized_tool_attempted: bool | None
+    defended_unauthorized_tool_executed: bool | None
+
+    # Evaluator provenance
     evaluator_method: str
     evaluator_rationale: str
+
+    # Latency / tokens / cost per condition (None preserved, never invented)
     latency_baseline_ms: float | None
     latency_defended_ms: float | None
     tokens_baseline_input: int | None
@@ -150,3 +169,4 @@ class EvaluationResponse(BaseModel):
     tokens_defended_output: int | None
     cost_baseline: float | None
     cost_defended: float | None
+
