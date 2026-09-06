@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **CX7 complete — CX8 next**
-Last successful commit: **CX5 commit recorded below**
+Current phase: **CX8 complete — Project Fully Audited & Research Ready**
+Last successful commit: `7a28220`
 Current blocker: **none**
 
 ## Supplied starter
@@ -76,10 +76,11 @@ Current blocker: **none**
   - Model used: Gemini 3.7 Flash (Medium)
   - Commit: `d71a5c4`
   - Notes: Connected real research APIs to the finalized Figma-derived Next.js frontend across all four routes (`/`, `/experiments`, `/benchmarks`, `/research`). Assistant page calls `/api/attacks/eligibility` to display real eligibility status across all 4 fixed attack families. Experiment Builder generates attacks via `/api/attacks/generate`, supports editing/restoring, executes paired runs via `/api/experiments/run`, and evaluates results via `/api/experiments/{id}/evaluate`. Benchmarks page renders live aggregate data from `/api/benchmarks`. Research page renders live research summary and deterministic findings from `/api/research`. Zero OmniRoute secrets or research calculations in frontend. Next.js lint (0 warnings/errors) and production build pass cleanly. 56/56 backend tests pass.
-- [ ] CX8 Final scientific/security audit
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] CX8 Final scientific/security audit
+  - Owner: Antigravity
+  - Model used: Gemini 3.8 Flash (High) (explicitly approved in launcher prompt)
+  - Commit: `7a335a6`
+  - Notes: Audit PASS. Verified all 14 scientific, security, architectural, and integration dimensions. Working tree clean, zero leaked secrets, Git history clean. Strict 4 attack families and 4 mapped defenses; zero RAG poisoning overlap. Paired experiment invariants verified (same prompt, model, temperature, token limit, spec hash, no auto/... routing). Condition-split evaluator contract correctly evaluates outcomes independently for baseline and defended conditions. Benchmark aggregation operates strictly via Python arithmetic (0 LLM calls) with exact sample-size denominators excluding unevaluated runs. Frontend across all 4 routes faithfully renders live backend data, dynamic target tracking, and truthful empty/loading states with zero illustrative values masquerading as real findings. Full backend test suite passes (56/56), Next.js lint passes (0 errors/warnings), Next.js production build succeeds with all 4 routes prerendered.
 
 ## Foundation verification checklist
 - [x] Git `main` initialized
@@ -98,17 +99,17 @@ Current blocker: **none**
 - [x] backend tests pass
 
 ## Final research verification checklist
-- [ ] Four attack families only
-- [ ] Four mapped defenses only
-- [ ] no RAG poisoning overlap
-- [ ] same prompt/model/settings in paired tests
-- [ ] controlled experiments never use `auto/...`
-- [ ] deterministic checks used where possible
-- [ ] benchmark values come from stored real runs
-- [ ] illustrative Figma values removed from live research states
-- [ ] no stored/canned answer reuse
-- [ ] runtime LLM calls/context/output remain compact
-- [ ] full frontend/backend tests/build pass
+- [x] Four attack families only
+- [x] Four mapped defenses only
+- [x] no RAG poisoning overlap
+- [x] same prompt/model/settings in paired tests
+- [x] controlled experiments never use `auto/...`
+- [x] deterministic checks used where possible
+- [x] benchmark values come from stored real runs
+- [x] illustrative Figma values removed from live research states
+- [x] no stored/canned answer reuse
+- [x] runtime LLM calls/context/output remain compact
+- [x] full frontend/backend tests/build pass
 
 ## Blockers
 None yet.
