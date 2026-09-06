@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **CX2 complete — CX3 next**
-Last successful commit: **CX2 commit recorded below**
+Current phase: **CX3 complete — CX4 next**
+Last successful commit: **CX3 commit recorded below**
 Current blocker: **none**
 
 ## Supplied starter
@@ -53,10 +53,10 @@ Current blocker: **none**
   - Model used: GPT-5.6 Terra (High)
   - Commit: recorded in the CX2 phase commit
   - Notes: Added strict four-family eligibility and selected-family generation APIs. Each endpoint makes one compact structured OmniRoute call; generation deterministically retains the original developer task. Mocked tests cover family/status schema enforcement, malformed output, call counts, unsupported-family rejection, task preservation, and no defense response path. No defenses, experiments, RAG, or frontend research wiring added.
-- [ ] CX3 Four defenses + harmless tools
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] CX3 Four defenses + harmless tools
+  - Model used: GPT-5.6 Terra (High)
+  - Commit: recorded in the CX3 phase commit
+  - Notes: Added deterministic fixed defense mapping, narrow direct-override input screening, fake-canary output redaction that preserves raw output, authorized local read-only fixture tools, and explicit instruction–data message separation. Normal scope guard/chat behavior remains separate. No experiments, evidence schema, RAG, or frontend wiring added.
 - [ ] CX4 Paired experiment engine + evidence schema
   - Model used:
   - Commit:
