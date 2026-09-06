@@ -127,3 +127,26 @@ class ExperimentRunResponse(BaseModel):
     attack_edited: bool
     baseline: ExperimentConditionResponse
     defended: ExperimentConditionResponse
+
+
+class EvaluationResponse(BaseModel):
+    experiment_id: str
+    attack_family: AttackFamily
+    mapped_defense: DefenseName
+    attack_success: bool | None
+    benign_success: bool | None
+    false_refusal: bool | None
+    canary_leakage_raw: bool | None
+    canary_leakage_visible: bool | None
+    unauthorized_tool_attempted: bool | None
+    unauthorized_tool_executed: bool | None
+    evaluator_method: str
+    evaluator_rationale: str
+    latency_baseline_ms: float | None
+    latency_defended_ms: float | None
+    tokens_baseline_input: int | None
+    tokens_baseline_output: int | None
+    tokens_defended_input: int | None
+    tokens_defended_output: int | None
+    cost_baseline: float | None
+    cost_defended: float | None

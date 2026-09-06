@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **CX4 complete — CX5 next**
-Last successful commit: **CX4 commit recorded below**
+Current phase: **CX5 complete — CX6 next**
+Last successful commit: **CX5 commit recorded below**
 Current blocker: **none**
 
 ## Supplied starter
@@ -61,10 +61,11 @@ Current blocker: **none**
   - Model used: Codex (CX4 phase)
   - Commit: recorded in the CX4 phase commit
   - Notes: Added `POST /api/experiments/run` with one immutable pair specification, exact pinned-model enforcement, one baseline call plus one defended call, and family-derived CX3 defense application. Added a single SQLite `experiment_runs` evidence table retaining reproducibility settings, raw/visible outputs, defense/tool evidence, actual model metadata, latency, optional usage/cost, and explicit completed/partial/failed state. No attack regeneration, evaluator, metrics, benchmarks, RAG, or frontend wiring added.
-- [ ] CX5 Evaluator + metrics
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] CX5 Evaluator + metrics
+  - Owner: Antigravity
+  - Model used: Claude Sonnet 4.6 (Thinking)
+  - Commit: TBD (recorded after push)
+  - Notes: Implemented deterministic-first evaluator in `app/services/evaluator.py`. Canary leakage and tool authorization are fully deterministic (exact string match / structured tool evidence). Input-screening baseline uses one compact LLM call only when screening did not trigger; untrusted code/text injection uses one compact LLM call when evidence is ambiguous. Null tokens/cost preserved as null. Added `EvaluationResponse` schema, `POST /api/experiments/{id}/evaluate` endpoint that runs evaluation and persists `evaluation_json` back to the experiment row. 7 focused evaluator tests pass; 38/38 total backend tests pass. No benchmark aggregation, no multi-judge chains, no frontend wiring added.
 - [ ] CX6 Benchmarks + research backend
   - Model used:
   - Commit:
