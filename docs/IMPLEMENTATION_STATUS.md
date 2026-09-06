@@ -74,7 +74,7 @@ Current blocker: **none**
 - [x] CX7 Frontend research wiring
   - Owner: Antigravity
   - Model used: Gemini 3.7 Flash (Medium)
-  - Commit: TBD (recorded after push)
+  - Commit: `d71a5c4`
   - Notes: Connected real research APIs to the finalized Figma-derived Next.js frontend across all four routes (`/`, `/experiments`, `/benchmarks`, `/research`). Assistant page calls `/api/attacks/eligibility` to display real eligibility status across all 4 fixed attack families. Experiment Builder generates attacks via `/api/attacks/generate`, supports editing/restoring, executes paired runs via `/api/experiments/run`, and evaluates results via `/api/experiments/{id}/evaluate`. Benchmarks page renders live aggregate data from `/api/benchmarks`. Research page renders live research summary and deterministic findings from `/api/research`. Zero OmniRoute secrets or research calculations in frontend. Next.js lint (0 warnings/errors) and production build pass cleanly. 56/56 backend tests pass.
 - [ ] CX8 Final scientific/security audit
   - Model used:
