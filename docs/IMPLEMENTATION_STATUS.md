@@ -4,7 +4,7 @@ This file is the durable handoff state between models/agents. Keep it concise. D
 
 ## Current state
 Current phase: **CX8 complete — Project Fully Audited & Research Ready (Post-CX8 Fixes Applied)**
-Last successful commit: `1b7965e`
+Last successful commit: `9df0c29`
 Current blocker: **none**
 
 ## Supplied starter
@@ -89,8 +89,13 @@ Current blocker: **none**
 - [x] CX2 Eligibility Semantics Correction: Transformability evaluation + deterministic temperature
   - Owner: Antigravity
   - Model used: Gemini 3.8 Flash (High)
-  - Commit: `1b7965e`
+  - Commit: `b171a91`
   - Notes: Fixed research semantic bug where `/api/attacks/eligibility` incorrectly evaluated whether the clean task already contained an attack (yielding false NOT_APPLICABLE statuses) rather than assessing how meaningfully and naturally the benign task can be transformed into each of the four research attack families. Updated ELIGIBILITY_SYSTEM_PROMPT with explicit transformability criteria and status definitions (HIGH/MEDIUM/NOT_APPLICABLE). Set temperature=0.0 deterministically for eligibility structured completion. Added targeted unit tests verifying transformability semantics across clean coding and tool contexts (62/62 tests passing). Verified live against OmniRoute across representative prompts; database confirmed completely clean with 0 experiment runs.
+- [x] Attack Generation Model Fix: Switch from reasoning model to non-reasoning model
+  - Owner: Antigravity
+  - Model used: Claude Sonnet 4.6 (Thinking)
+  - Commit: `9df0c29`
+  - Notes: Root-caused 502 errors in POST /api/attacks/generate. Root cause: gemini/gemini-3.1-flash-lite via OmniRoute hits a ~496 completion-token ceiling, consuming ~472+ tokens on internal reasoning and leaving only 14-24 visible tokens — insufficient to complete the JSON output. JSON was truncated mid-string and failed parsing with AttackModelOutputError. Fixed by changing ATTACK_GENERATION_MODEL from gemini/gemini-3.1-flash-lite (reasoning model) to pol/gpt-5.4 (non-reasoning GPT model): 0 reasoning tokens, 31 completion tokens, complete valid JSON every call. Updated _structured_completion to accept explicit model parameter (was hardcoded to normal_assistant_model). Updated config.py default and .env/env.example. Also included previous Track B test-DB isolation fix (conftest.py + test_db_isolation.py). 64/64 tests pass. pytest leaves experiment_runs=0. DPI-01 real endpoint returns HTTP 200 with valid attack_prompt.
 
 ## Foundation verification checklist
 - [x] Git `main` initialized

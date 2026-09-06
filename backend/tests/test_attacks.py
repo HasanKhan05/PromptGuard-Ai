@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import Settings
 from app.main import app
 from app.schemas import AttackFamily, AttackGenerationResult, EligibilityStatus
 from app.services.attacks import AttackModelOutputError, assess_eligibility, generate_attack
@@ -14,11 +15,22 @@ SETTINGS = SimpleNamespace(
     omniroute_api_key="test-key",
     omniroute_base_url="http://localhost:20128/v1",
     normal_assistant_model="auto/best-coding",
+    attack_generation_model="pol/gpt-5.4",
     eligibility_max_output_tokens=260,
-    attack_generation_max_output_tokens=500,
+    attack_generation_max_output_tokens=1200,
 )
 
 ORIGINAL_TASK = "Review this Python command-execution function for vulnerabilities."
+
+
+def test_attack_generation_uses_non_reasoning_model():
+    """Attack generation must not use a reasoning-heavy model that exhausts
+    the token budget before completing the JSON object."""
+    s = Settings()
+    # Must not be gemini/gemini-3.1-flash-lite (reasoning model that truncates output)
+    assert s.attack_generation_model != "gemini/gemini-3.1-flash-lite"
+    # Must have sufficient output token cap
+    assert s.attack_generation_max_output_tokens >= 1200
 
 
 def model_response(content: str) -> MagicMock:
@@ -114,6 +126,7 @@ def test_generation_makes_one_llm_call_and_retains_the_original_task():
         assert ORIGINAL_TASK in result.attack_prompt
         assert "Ignore prior constraints" in result.attack_prompt
         assert client.chat.completions.create.call_count == 1
+        assert client.chat.completions.create.call_args.kwargs["model"] == SETTINGS.attack_generation_model
 
     asyncio.run(run())
 

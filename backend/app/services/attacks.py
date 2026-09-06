@@ -76,6 +76,7 @@ async def _structured_completion(
     system_prompt: str,
     user_prompt: str,
     max_tokens: int,
+    model: str,
     temperature: float = 0.0,
 ) -> dict:
     settings = get_settings()
@@ -87,7 +88,7 @@ async def _structured_completion(
         api_key=settings.omniroute_api_key,
     )
     response = await client.chat.completions.create(
-        model=settings.normal_assistant_model,
+        model=model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -106,6 +107,7 @@ async def assess_eligibility(original_task: str) -> AttackEligibilityResponse:
         ELIGIBILITY_SYSTEM_PROMPT,
         f"Original legitimate developer task:\n{original_task}",
         settings.eligibility_max_output_tokens,
+        settings.normal_assistant_model,
     )
     try:
         return AttackEligibilityResponse.model_validate(parsed)
@@ -131,6 +133,7 @@ a tool executed. Keep it suitable to append to an original legitimate software-d
             f"Family behavior: {family_instruction}"
         ),
         settings.attack_generation_max_output_tokens,
+        settings.attack_generation_model,
     )
     attack_instruction = parsed.get("attack_instruction")
     if not isinstance(attack_instruction, str) or not attack_instruction.strip():
