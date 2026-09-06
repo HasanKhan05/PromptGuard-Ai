@@ -3,8 +3,8 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **AG6 complete — hybrid execution plan adopted, next phase CX1 (Antigravity, Gemini 3.7 Flash)**
-Last successful commit: **e798411**
+Current phase: **CX1 complete — CX2 next**
+Last successful commit: **2dece79**
 Current blocker: **none**
 
 ## Supplied starter
@@ -43,15 +43,12 @@ Current blocker: **none**
   - Commit: `e798411`
   - Notes: Independent audit PASS. Git clean, no secrets tracked in history. Frontend build/lint pass, four routes intact, design unmodified. FastAPI /health and /api/chat functional, CORS correct for local dev, OmniRoute key backend-only. Default/Gemini/Pollinations routes verified live. SQLite chat_runs persistence confirmed. No banned dependencies or premature CX features found. Backend tests 3/3 pass. Ready for CX0.
 
-## Codex phases
-- [ ] CX0 Handoff audit
-  - Model used:
-  - Commit:
-  - Notes:
-- [ ] CX1 Assistant control + scope guard
-  - Model used:
-  - Commit:
-  - Notes:
+## Research & Execution Phases (Hybrid Strategy)
+- [x] CX1 Assistant control + scope guard
+  - Owner: Antigravity
+  - Model used: Gemini 3.7 Flash (Medium)
+  - Commit: `f43628d`
+  - Notes: Finalized Software Development Assistant role with compact system prompt. Implemented deterministic-first application scope guard supporting software tasks across any domain (e.g. building car price scraper/API) and legitimate security/code questions while rejecting non-software requests without LLM overhead. Single compact LLM classifier fallback for ambiguous prompts with bounded tokens. Verified streaming, headers, refusal response, SQLite storage, and 10 backend tests.
 - [ ] CX2 Attack eligibility + generation
   - Model used:
   - Commit:
