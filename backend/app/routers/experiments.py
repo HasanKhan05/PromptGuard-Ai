@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from ..db import SessionLocal
 from ..models import ExperimentRun
-from ..schemas import EvaluationResponse, ExperimentRunRequest, ExperimentRunResponse
+from ..schemas import EvaluationResponse, ExperimentRunDetailResponse, ExperimentRunRequest, ExperimentRunResponse
 from ..services.evaluator import evaluate_experiment_run, result_to_dict
 from ..services.experiments import run_paired_experiment
 
@@ -70,5 +70,21 @@ def evaluate_experiment(experiment_id: str) -> EvaluationResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     finally:
         db.close()
+
+
+@router.get("/{experiment_id}", response_model=ExperimentRunDetailResponse)
+def get_experiment(experiment_id: str) -> ExperimentRunDetailResponse:
+    from ..schemas import ExperimentRunDetailResponse
+    from ..services.benchmarks import get_experiment_detail
+
+    db = SessionLocal()
+    try:
+        detail = get_experiment_detail(experiment_id, db)
+        if detail is None:
+            raise HTTPException(status_code=404, detail=f"Experiment {experiment_id!r} not found.")
+        return detail
+    finally:
+        db.close()
+
 
 

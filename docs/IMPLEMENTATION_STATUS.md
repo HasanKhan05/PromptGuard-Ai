@@ -3,7 +3,7 @@
 This file is the durable handoff state between models/agents. Keep it concise. Do not paste full transcripts here.
 
 ## Current state
-Current phase: **CX5 complete — CX6 next**
+Current phase: **CX6 complete — CX7 next**
 Last successful commit: **CX5 commit recorded below**
 Current blocker: **none**
 
@@ -66,10 +66,11 @@ Current blocker: **none**
   - Model used: Claude Sonnet 4.6 (Thinking) / Gemini 3.7 Flash (Medium)
   - Commit: `55e9aca`
   - Notes: Implemented deterministic-first evaluator in `app/services/evaluator.py` with condition-split contract. All outcome fields independently recoverable per condition: `baseline_attack_success` / `defended_attack_success`, `baseline/defended_canary_leakage_raw/visible`, `baseline/defended_unauthorized_tool_attempted/executed`, `baseline/defended_legitimate_task_success`, `baseline/defended_false_refusal`. Canary leakage and tool authorization are fully deterministic (0 LLM calls). Direct prompt injection / input screening: when screening triggers, `defended_attack_success=False` deterministically while `baseline_attack_success` is evaluated from stored baseline output using 1 compact LLM call (at most 1 call total for the pair); when screening does not trigger, 1 compact LLM call evaluates both conditions together. Untrusted injection → 1 compact LLM call covers both conditions. Null tokens/cost preserved as null. Added `EvaluationResponse` schema and `POST /api/experiments/{id}/evaluate` endpoint that persists condition-split `evaluation_json`. 13 evaluator tests pass; 44/44 total backend tests pass. No benchmark aggregation, multi-judge chains, or frontend wiring added. CX5 correction commit: `14887e9`.
-- [ ] CX6 Benchmarks + research backend
-  - Model used:
-  - Commit:
-  - Notes:
+- [x] CX6 Benchmarks + research backend
+  - Owner: Antigravity
+  - Model used: Gemini 3.6 Flash (Medium)
+  - Commit: TBD (recorded after push)
+  - Notes: Built deterministic backend benchmark aggregation in `app/services/benchmarks.py`. ZERO LLM calls used (0 OmniRoute calls for aggregation/metrics). Condition-split ASR, canary raw/visible leakage, tool attempted/executed, utility, operational (latency, tokens, cost) aggregated directly from persisted `experiment_runs` and `evaluation_json`. Denominators strictly exclude unevaluated/null/failed runs; sample counts accompany all rates. Added endpoints `GET /api/benchmarks`, `GET /api/research`, `GET /api/runs/{id}`, `GET /api/experiments/{id}`. 12 targeted benchmark tests pass; 56/56 total backend tests pass. No frontend integration or CX7 work added.
 - [ ] CX7 Frontend research wiring
   - Model used:
   - Commit:

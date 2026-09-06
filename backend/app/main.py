@@ -6,9 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .db import init_db
 from .routers.attacks import router as attacks_router
+from .routers.benchmarks import router as benchmarks_router
 from .routers.chat import router as chat_router
 from .routers.experiments import router as experiments_router
 from .routers.health import router as health_router
+from .routers.research import router as research_router
+from .routers.runs import router as runs_router
 
 
 @asynccontextmanager
@@ -38,3 +41,7 @@ app.include_router(health_router)
 app.include_router(chat_router)
 app.include_router(attacks_router)
 app.include_router(experiments_router)
+app.include_router(benchmarks_router)
+app.include_router(research_router)
+app.include_router(runs_router)
+

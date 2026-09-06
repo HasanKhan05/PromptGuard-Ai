@@ -170,3 +170,97 @@ class EvaluationResponse(BaseModel):
     cost_baseline: float | None
     cost_defended: float | None
 
+
+class RateMetric(BaseModel):
+    rate: float | None = None
+    count: int = 0
+    denominator: int = 0
+
+
+class OperationalMetric(BaseModel):
+    avg: float | None = None
+    sum: float | None = None
+    count: int = 0
+
+
+class FamilyBenchmarkMetrics(BaseModel):
+    family: AttackFamily
+    mapped_defense: DefenseName
+    total_runs: int = 0
+    evaluated_runs: int = 0
+    baseline_asr: RateMetric
+    defended_asr: RateMetric
+    asr_reduction: float | None = None
+
+    # Canary family specific
+    canary_leakage_raw_baseline: RateMetric | None = None
+    canary_leakage_visible_baseline: RateMetric | None = None
+    canary_leakage_raw_defended: RateMetric | None = None
+    canary_leakage_visible_defended: RateMetric | None = None
+
+    # Tool family specific
+    tool_attempted_baseline: RateMetric | None = None
+    tool_executed_baseline: RateMetric | None = None
+    tool_attempted_defended: RateMetric | None = None
+    tool_executed_defended: RateMetric | None = None
+
+
+class UtilityBenchmarkMetrics(BaseModel):
+    baseline_legitimate_task_success: RateMetric
+    defended_legitimate_task_success: RateMetric
+    baseline_false_refusal: RateMetric
+    defended_false_refusal: RateMetric
+
+
+class OperationalBenchmarkMetrics(BaseModel):
+    latency_baseline_ms: OperationalMetric
+    latency_defended_ms: OperationalMetric
+    input_tokens_baseline: OperationalMetric
+    input_tokens_defended: OperationalMetric
+    output_tokens_baseline: OperationalMetric
+    output_tokens_defended: OperationalMetric
+    cost_baseline: OperationalMetric
+    cost_defended: OperationalMetric
+
+
+class BenchmarkMetricsResponse(BaseModel):
+    total_runs_count: int
+    evaluated_runs_count: int
+    unevaluated_runs_count: int
+    status_counts: dict[str, int]
+    overall_baseline_asr: RateMetric
+    overall_defended_asr: RateMetric
+    overall_asr_reduction: float | None = None
+    defense_effectiveness: float | None = None
+    by_family: list[FamilyBenchmarkMetrics]
+    utility: UtilityBenchmarkMetrics
+    operational: OperationalBenchmarkMetrics
+
+
+class ResearchSummaryResponse(BaseModel):
+    benchmark_target: dict[str, Any]
+    overall_security: dict[str, Any]
+    family_breakdown: list[dict[str, Any]]
+    utility_tradeoff: dict[str, Any]
+    operational_impact: dict[str, Any]
+    structured_findings: list[str]
+
+
+class ExperimentRunDetailResponse(BaseModel):
+    experiment_id: str
+    created_at: datetime
+    status: ExperimentStatus
+    original_task: str
+    attack_prompt: str
+    attack_family: AttackFamily
+    mapped_defense: DefenseName
+    model: str
+    temperature: float
+    max_output_tokens: int
+    generation_source: str
+    attack_edited: bool
+    baseline: ExperimentConditionResponse
+    defended: ExperimentConditionResponse
+    evaluation: EvaluationResponse | None = None
+
+
