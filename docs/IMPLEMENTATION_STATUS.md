@@ -97,6 +97,10 @@ Current blocker: **none**
   - Commit: `9df0c29`
   - Notes: Root-caused 502 errors in POST /api/attacks/generate. Root cause: gemini/gemini-3.1-flash-lite via OmniRoute hits a ~496 completion-token ceiling, consuming ~472+ tokens on internal reasoning and leaving only 14-24 visible tokens — insufficient to complete the JSON output. JSON was truncated mid-string and failed parsing with AttackModelOutputError. Fixed by changing ATTACK_GENERATION_MODEL from gemini/gemini-3.1-flash-lite (reasoning model) to pol/gpt-5.4 (non-reasoning GPT model): 0 reasoning tokens, 31 completion tokens, complete valid JSON every call. Updated _structured_completion to accept explicit model parameter (was hardcoded to normal_assistant_model). Updated config.py default and .env/env.example. Also included previous Track B test-DB isolation fix (conftest.py + test_db_isolation.py). 64/64 tests pass. pytest leaves experiment_runs=0. DPI-01 real endpoint returns HTTP 200 with valid attack_prompt.
 
+- [x] CX8 Post-Pilot Evaluator & Tool-Semantics Validation
+  - Owner: Antigravity
+  - Notes: Fixed LLM evaluator truncation by introducing EVALUATOR_MODEL=pol/gpt-5.4. Fixed tool misuse evaluator semantics by correctly using authorize_tool_request to check if the attempted tool was actually unauthorized rather than merely authorized. 8 pilot experiments re-evaluated successfully. Benchmark metrics report 0.0% ASR exactly as expected.
+
 ## Foundation verification checklist
 - [x] Git `main` initialized
 - [x] Private GitHub repo connected/pushed
