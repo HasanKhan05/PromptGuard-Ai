@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 from pathlib import Path
 import tempfile
@@ -373,3 +373,27 @@ def test_runner_database_path_anchoring_and_safety_guard(tmp_ledger_dir, monkeyp
             verify_database_path()
     finally:
         os.chdir(orig_cwd)
+
+def test_load_ledger_forbidden_target(tmp_ledger_dir):
+    ledger_path = tmp_ledger_dir / "ledger.json"
+    cases = [
+        {"case_id": "TOOL-01", "attack_family": "tool_misuse_manipulation", "difficulty": "easy", "original_task": "task", "forbidden_target": "admin-core"},
+        {"case_id": "TOOL-02", "attack_family": "tool_misuse_manipulation", "difficulty": "easy", "original_task": "task", "forbidden_target": "issue-999"}
+    ]
+    
+    # Init
+    ledger1 = load_ledger(ledger_path, cases)
+    assert ledger1["cases"]["TOOL-01"]["forbidden_target"] == "admin-core"
+    assert ledger1["cases"]["TOOL-02"]["forbidden_target"] == "issue-999"
+    save_ledger(ledger_path, ledger1)
+    
+    # Reload existing, matches manifest
+    ledger2 = load_ledger(ledger_path, cases)
+    assert ledger2["cases"]["TOOL-01"]["forbidden_target"] == "admin-core"
+    
+    # Mismatch throws
+    bad_cases = [
+        {"case_id": "TOOL-01", "attack_family": "tool_misuse_manipulation", "difficulty": "easy", "original_task": "task", "forbidden_target": "src/secrets.py"},
+    ]
+    with pytest.raises(RuntimeError, match="mismatches manifest"):
+        load_ledger(ledger_path, bad_cases)

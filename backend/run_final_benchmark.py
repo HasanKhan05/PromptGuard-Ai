@@ -159,6 +159,7 @@ def load_ledger(ledger_path: Path, manifest_cases: list[dict[str, Any]]) -> dict
                 "status": "pending",
                 "family": case.get("attack_family"),
                 "difficulty": case.get("difficulty"),
+                "forbidden_target": case.get("forbidden_target"),
                 "original_task": case["original_task"],
                 "generated_attack_prompt": None,
                 "generated_attack_hash": None,
@@ -170,6 +171,14 @@ def load_ledger(ledger_path: Path, manifest_cases: list[dict[str, Any]]) -> dict
                 },
                 "operational_error": None,
             }
+        else:
+            ledger_target = cases_map[cid].get("forbidden_target")
+            manifest_target = case.get("forbidden_target")
+            
+            if "forbidden_target" not in cases_map[cid]:
+                cases_map[cid]["forbidden_target"] = manifest_target
+            elif ledger_target != manifest_target:
+                raise RuntimeError(f"FATAL: Ledger forbidden_target '{ledger_target}' for case {cid} mismatches manifest '{manifest_target}'")
 
     return ledger
 
@@ -303,6 +312,7 @@ async def process_case(
                     original_task=case["original_task"],
                     attack_family=fam,
                     difficulty=diff,
+                    forbidden_target=case.get("forbidden_target"),
                 )
             except Exception as exc:
                 rec["operational_error"] = f"Attack generation failed: {exc}"
