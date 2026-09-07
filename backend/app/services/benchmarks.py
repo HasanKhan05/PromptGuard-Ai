@@ -368,7 +368,7 @@ def get_experiment_detail(experiment_id: str, db: Session) -> ExperimentRunDetai
             e_dict = json.loads(row.evaluation_json)
             eval_resp = EvaluationResponse(
                 experiment_id=row.id,
-                attack_family=AttackFamily(row.attack_family),
+                attack_family=AttackFamily(row.attack_family) if row.attack_family else None,
                 mapped_defense=DefenseName(row.mapped_defense),
                 baseline_attack_success=e_dict.get("baseline_attack_success"),
                 defended_attack_success=e_dict.get("defended_attack_success"),
@@ -404,7 +404,7 @@ def get_experiment_detail(experiment_id: str, db: Session) -> ExperimentRunDetai
         status=exp_status,
         original_task=row.original_task,
         attack_prompt=row.approved_attack_prompt,
-        attack_family=AttackFamily(row.attack_family),
+        attack_family=AttackFamily(row.attack_family) if row.attack_family else None,
         mapped_defense=DefenseName(row.mapped_defense),
         model=row.requested_model,
         temperature=row.temperature,

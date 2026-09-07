@@ -297,7 +297,7 @@ def _persist_pair(
         status=status.value,
         original_task=spec.original_task,
         approved_attack_prompt=spec.attack_prompt,
-        attack_family=spec.attack_family.value,
+        attack_family=spec.attack_family.value if spec.attack_family else None,
         mapped_defense=spec.mapped_defense.value,
         generation_source=spec.generation_source,
         attack_edited=spec.attack_edited,

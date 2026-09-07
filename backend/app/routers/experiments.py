@@ -37,7 +37,7 @@ def evaluate_experiment(experiment_id: str) -> EvaluationResponse:
         from ..schemas import AttackFamily, DefenseName
         return EvaluationResponse(
             experiment_id=experiment_id,
-            attack_family=AttackFamily(row.attack_family),
+            attack_family=AttackFamily(row.attack_family) if row.attack_family else None,
             mapped_defense=DefenseName(row.mapped_defense),
             baseline_attack_success=result.baseline_attack_success,
             defended_attack_success=result.defended_attack_success,

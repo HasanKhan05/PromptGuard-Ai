@@ -260,7 +260,7 @@ class ExperimentRunDetailResponse(BaseModel):
     status: ExperimentStatus
     original_task: str
     attack_prompt: str
-    attack_family: AttackFamily
+    attack_family: AttackFamily | None
     mapped_defense: DefenseName
     model: str
     temperature: float

@@ -29,7 +29,7 @@ class ExperimentRun(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     original_task: Mapped[str] = mapped_column(Text, nullable=False)
     approved_attack_prompt: Mapped[str] = mapped_column(Text, nullable=False)
-    attack_family: Mapped[str] = mapped_column(String(80), nullable=False)
+    attack_family: Mapped[str | None] = mapped_column(String(80), nullable=True)
     mapped_defense: Mapped[str] = mapped_column(String(80), nullable=False)
     generation_source: Mapped[str] = mapped_column(String(40), nullable=False)
     attack_edited: Mapped[bool] = mapped_column(Boolean, nullable=False)
