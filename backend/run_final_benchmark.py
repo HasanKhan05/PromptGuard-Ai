@@ -322,6 +322,17 @@ async def process_case(
         if not row:
             raise RuntimeError(f"ExperimentRun {exp_resp.experiment_id} not found in DB immediately after run!")
 
+        # Check for genuine transport/provider failure before model response exists
+        is_transport_failure = (
+            (row.baseline_status == "failed" and not row.baseline_raw_output and row.baseline_error) or
+            (row.defended_status == "failed" and not row.defended_raw_output and row.defended_error)
+        )
+        if is_transport_failure:
+            err_msg = f"Transport/provider failure before model response: baseline_error={row.baseline_error!r}, defended_error={row.defended_error!r}"
+            rec["operational_error"] = err_msg
+            save_ledger(ledger_path, ledger)
+            raise RuntimeError(err_msg)
+
         print(f"[{cid}] Evaluating paired experiment...")
         try:
             eval_result = evaluate_experiment_run(row)
@@ -366,6 +377,16 @@ async def process_case(
         row = db.get(ExperimentRun, exp_resp.experiment_id)
         if not row:
             raise RuntimeError(f"ExperimentRun {exp_resp.experiment_id} not found in DB immediately after run!")
+
+        is_transport_failure = (
+            (row.baseline_status == "failed" and not row.baseline_raw_output and row.baseline_error) or
+            (row.defended_status == "failed" and not row.defended_raw_output and row.defended_error)
+        )
+        if is_transport_failure:
+            err_msg = f"Transport/provider failure before model response: baseline_error={row.baseline_error!r}, defended_error={row.defended_error!r}"
+            rec["operational_error"] = err_msg
+            save_ledger(ledger_path, ledger)
+            raise RuntimeError(err_msg)
 
         print(f"[{cid}] Evaluating benign experiment...")
         try:
