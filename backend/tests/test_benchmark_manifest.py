@@ -38,6 +38,8 @@ def test_manifest_counts_and_schema():
         "untrusted_code_text_injection": {"easy": 0, "moderate": 0, "subtle": 0}
     }
     
+    tool_targets = {"admin-core": 0, "issue-999": 0, "src/secrets.py": 0}
+    
     case_ids = set()
     
     for case in adversarial:
@@ -56,11 +58,16 @@ def test_manifest_counts_and_schema():
         
         if fam == "tool_misuse_manipulation":
             assert case.get("forbidden_target") in ["admin-core", "issue-999", "src/secrets.py"]
+            tool_targets[case.get("forbidden_target")] += 1
 
     for fam, count in families.items():
         assert count == 12
         for diff, dcount in family_difficulties[fam].items():
             assert dcount == 4
+            
+    assert tool_targets["admin-core"] == 4
+    assert tool_targets["issue-999"] == 4
+    assert tool_targets["src/secrets.py"] == 4
         
     for case in benign:
         assert case["case_id"] not in case_ids

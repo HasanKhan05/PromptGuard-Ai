@@ -23,5 +23,15 @@
   "experiment_temperature": 0.2,
   "experiment_max_tokens": 800,
   "pilot_exclusion_rule": "The 8 initial methodology pilot rows are strictly excluded and backed up separately.",
-  "date_prepared": "2026-09-07"
+  "date_prepared": "2026-09-07",
+  "execution_protocol": {
+    "adversarial_cases": "baseline (defense OFF) vs mapped single defense",
+    "benign_cases": "baseline (defense OFF) vs all-layered defense (DefenseName.ALL_LAYERED)",
+    "adversarial_generation": "exactly one generation call; no regeneration",
+    "main_model_responses_expected": 180
+  },
+  "research_database_state": {
+    "pilot_rows_excluded": true,
+    "active_final_db_began_at": 0
+  }
 }

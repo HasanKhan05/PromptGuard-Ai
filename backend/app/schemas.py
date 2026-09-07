@@ -73,6 +73,7 @@ class DefenseName(str, Enum):
     OUTPUT_SCREENING = "output_screening"
     TOOL_AUTHORIZATION = "tool_authorization_least_privilege"
     INSTRUCTION_DATA_SEPARATION = "instruction_data_separation"
+    ALL_LAYERED = "all_layered_defense"
 
 
 class ConditionStatus(str, Enum):
@@ -89,7 +90,7 @@ class ExperimentStatus(str, Enum):
 class ExperimentRunRequest(BaseModel):
     original_task: str = Field(min_length=1, max_length=20_000)
     attack_prompt: str = Field(min_length=1, max_length=25_000)
-    attack_family: AttackFamily
+    attack_family: AttackFamily | None = None
     model: str | None = Field(default=None, min_length=1, max_length=160)
     temperature: float | None = Field(default=None, ge=0.0, le=2.0)
     max_output_tokens: int | None = Field(default=None, ge=1, le=8_000)
@@ -125,7 +126,7 @@ class ExperimentRunResponse(BaseModel):
     status: ExperimentStatus
     original_task: str
     attack_prompt: str
-    attack_family: AttackFamily
+    attack_family: AttackFamily | None
     mapped_defense: DefenseName
     model: str
     temperature: float
@@ -138,7 +139,7 @@ class ExperimentRunResponse(BaseModel):
 
 class EvaluationResponse(BaseModel):
     experiment_id: str
-    attack_family: AttackFamily
+    attack_family: AttackFamily | None
     mapped_defense: DefenseName
 
     # Attack success — independently recoverable per condition
