@@ -345,3 +345,31 @@ def test_complete_case_is_skipped_in_runner(tmp_ledger_dir, test_db):
         assert processed_cases == ["DPI-PENDING-02"]
 
     asyncio.run(run())
+
+
+def test_runner_database_path_anchoring_and_safety_guard(tmp_ledger_dir, monkeypatch):
+    """Verify runner anchors relative SQLite path to backend and guard catches violations."""
+    from run_final_benchmark import BACKEND_DIR, verify_database_path
+    from app.config import Settings
+    import os
+
+    # 1. Normal resolution when anchored
+    mock_settings = Settings(database_url="sqlite:///./promptguard.db")
+    monkeypatch.setattr("run_final_benchmark.get_settings", lambda: mock_settings)
+
+    orig_cwd = os.getcwd()
+    try:
+        # Simulate invocation from an external directory
+        os.chdir(tmp_ledger_dir)
+        # Runner anchoring ensures cwd is set to BACKEND_DIR
+        os.chdir(BACKEND_DIR)
+        resolved = verify_database_path()
+        assert resolved == (BACKEND_DIR / "promptguard.db").resolve()
+
+        # 2. Safety guard raises if unexpectedly pointing outside backend
+        bad_settings = Settings(database_url="sqlite:///./other_folder/promptguard.db")
+        monkeypatch.setattr("run_final_benchmark.get_settings", lambda: bad_settings)
+        with pytest.raises(RuntimeError, match="Database path safety violation"):
+            verify_database_path()
+    finally:
+        os.chdir(orig_cwd)

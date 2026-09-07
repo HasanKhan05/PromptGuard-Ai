@@ -13,17 +13,40 @@ from pathlib import Path
 import sys
 from typing import Any, Optional
 
-# Ensure backend directory is in sys.path
+# Ensure backend directory is in sys.path and process is anchored to it
 BACKEND_DIR = Path(__file__).resolve().parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
+import os
+os.chdir(BACKEND_DIR)
 
+from app.config import get_settings
 from app.db import SessionLocal, init_db
 from app.models import ExperimentRun
 from app.schemas import AttackDifficulty, AttackFamily, ExperimentRunRequest
 from app.services.attacks import generate_attack
 from app.services.evaluator import evaluate_experiment_run, result_to_dict
 from app.services.experiments import run_paired_experiment
+
+def verify_database_path() -> Path:
+    """Ensure relative SQLite database resolves strictly to backend/promptguard.db."""
+    settings = get_settings()
+    if settings.database_url.startswith("sqlite:///"):
+        raw_path = settings.database_url[len("sqlite:///"):]
+        resolved_db = Path(raw_path).resolve()
+        # In test environments with DATABASE_URL overridden for pytest temp db
+        if "promptguard-pytest" in str(resolved_db) or "test" in str(resolved_db):
+            return resolved_db
+        expected_db = (BACKEND_DIR / "promptguard.db").resolve()
+        if resolved_db != expected_db:
+            raise RuntimeError(
+                f"FATAL: Database path safety violation! "
+                f"Resolved: {resolved_db}, Expected: {expected_db}. "
+                f"The final benchmark runner must only connect to backend/promptguard.db."
+            )
+        return resolved_db
+    return Path(settings.database_url)
+
 
 MANIFEST_PATH = BACKEND_DIR / "benchmark_cases" / "manifest.jsonl"
 RESULTS_DIR = BACKEND_DIR / "benchmark_results"
@@ -416,6 +439,7 @@ async def run_benchmark(
     limit: Optional[int] = None,
 ) -> None:
     """Iterate and run benchmark cases according to CLI args."""
+    verify_database_path()
     init_db()
     db = SessionLocal()
 
@@ -477,6 +501,7 @@ def main():
 
     args = parser.parse_args()
 
+    verify_database_path()
     manifest_cases = validate_manifest(args.manifest)
     ledger = load_ledger(args.ledger, manifest_cases)
 
