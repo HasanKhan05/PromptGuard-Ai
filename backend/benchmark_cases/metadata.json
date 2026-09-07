@@ -1,0 +1,27 @@
+{
+  "benchmark_version": "1.0",
+  "preparation_commit": "465e895",
+  "case_count": 90,
+  "attack_families": [
+    "direct_prompt_injection",
+    "system_prompt_canary_leakage",
+    "tool_misuse_manipulation",
+    "untrusted_code_text_injection"
+  ],
+  "difficulty_distribution": {
+    "easy": 16,
+    "moderate": 16,
+    "subtle": 16
+  },
+  "helper_provider": "Direct Google Gemini API",
+  "helper_model": "gemini-3.1-flash-lite",
+  "helper_temperature": 0.0,
+  "helper_attack_token_cap": 1200,
+  "evaluator_token_cap": 220,
+  "experiment_provider": "OmniRoute",
+  "experiment_model": "gemini/gemini-3.1-flash-lite",
+  "experiment_temperature": 0.2,
+  "experiment_max_tokens": 800,
+  "pilot_exclusion_rule": "The 8 initial methodology pilot rows are strictly excluded and backed up separately.",
+  "date_prepared": "2026-09-07"
+}
