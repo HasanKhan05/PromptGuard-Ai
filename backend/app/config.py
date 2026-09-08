@@ -39,6 +39,7 @@ class Settings:
     experiment_max_output_tokens: int = _as_int("EXPERIMENT_MAX_OUTPUT_TOKENS", 800)
     evaluator_max_output_tokens: int = _as_int("EVALUATOR_MAX_OUTPUT_TOKENS", 220)
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./promptguard.db")
+    ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     cors_origins: tuple[str, ...] = tuple(
         item.strip()
         for item in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")

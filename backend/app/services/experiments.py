@@ -25,6 +25,7 @@ from .defenses import (
     screen_output_for_canary,
 )
 from .llm import SYSTEM_PROMPT, extract_text_content, get_client
+from .ollama import get_ollama_client, is_ollama_model
 from .tools import READ_ONLY_TOOL_SCHEMAS, ToolRequest, execute_read_only_tool
 
 SYSTEM_PROMPT_VERSION = "cx1-v1"
@@ -339,13 +340,20 @@ def _persist_pair(
     return row
 
 
+def get_experiment_client(model: str):
+    """Route experiment model requests between local Ollama and OmniRoute/Gemini providers."""
+    if is_ollama_model(model):
+        return get_ollama_client()
+    return get_client()
+
+
 async def run_paired_experiment(
     payload: ExperimentRunRequest,
     db: Session,
 ) -> ExperimentRunResponse:
     """Run and persist one controlled pair from a single immutable experiment specification."""
     spec = _make_spec(payload)
-    client = get_client()
+    client = get_experiment_client(spec.model)
     baseline = await _run_condition(client, spec, defense_enabled=False)
     defended = await _run_condition(client, spec, defense_enabled=True)
 
