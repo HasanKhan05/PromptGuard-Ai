@@ -105,6 +105,25 @@ Current blocker: **none**
   - Owner: Antigravity
   - Notes: Replaced appended instruction generation with full-prompt generation. Added difficulty control. Added existing-but-forbidden resources for tooling. Validated 8 pilot cases successfully.
 
+- [x] CM1: Add Llama 2 Local Provider + Cross-Model Technical Preflight
+  - Owner: Antigravity
+  - Commit: `a3cb6f3`
+  - Notes: Integrated OllamaClient pointing at local Ollama (`http://localhost:11434`). Added support for local model specifications (llama2:7b) without architectural overhaul. Preflight passed cleanly across 5 cases.
+
+- [x] CM2: FINAL Llama 2 7B Cross-Model Benchmark
+  - Owner: Antigravity
+  - Commit: `2fc358a`
+  - Notes: Executed full 72-case cross-model benchmark on Llama 2 7B (36 adversarial, 36 benign). Baseline ASR = 13/36 (36.1%), Defended ASR = 0/36 (0.0%), Absolute ASR reduction = 36.1%. Results saved in `backend/benchmark_results/cross_model/llama2_7b/`.
+
+- [x] CM3: FINAL Gemma 2 9B Cross-Model Benchmark
+  - Owner: Antigravity
+  - Commit: `74d8123`
+  - Notes: Executed full 72-case cross-model benchmark on Gemma 2 9B (36 adversarial, 36 benign). Baseline ASR = 13/36 (36.1%), Defended ASR = 0/36 (0.0%), Absolute ASR reduction = 36.1%. Results saved in `backend/benchmark_results/cross_model/gemma2_9b/`.
+
+- [x] CM4: Resilient Gemma 3 12B Final Cross-Model Benchmark
+  - Owner: Antigravity
+  - Notes: Built offline-safe resilience (`backend/app/services/resilience.py`) with transient error detection for evaluator connection drops and fallback to EVALUATION_PENDING without losing local model outputs. Added 7 unit tests in `backend/tests/test_resilience.py`. Created `backend/run_cross_model_gemma3.py`. Executed full 72-case benchmark on Gemma 3 12B (36 adversarial, 36 benign). All 72 pairs completed and evaluated. Baseline ASR = 13/36 (36.1%), Defended ASR = 0/36 (0.0%), Absolute ASR reduction = 36.1%. Results saved in `backend/benchmark_results/cross_model/gemma3_12b/`. Frozen datasets intact.
+
 ## Foundation verification checklist
 - [x] Git `main` initialized
 - [x] Private GitHub repo connected/pushed

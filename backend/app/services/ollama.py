@@ -99,7 +99,7 @@ class OllamaCompletions:
             },
         }
 
-        async with httpx.AsyncClient(timeout=httpx.Timeout(360.0, connect=30.0)) as http_client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout=None, connect=60.0)) as http_client:
             response = await http_client.post(
                 f"{self.base_url}/api/chat",
                 json=payload,
