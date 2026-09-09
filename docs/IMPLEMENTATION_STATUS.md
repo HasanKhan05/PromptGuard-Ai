@@ -122,7 +122,12 @@ Current blocker: **none**
 
 - [x] CM4: Resilient Gemma 3 12B Final Cross-Model Benchmark
   - Owner: Antigravity
+  - Commit: `49a38de`
   - Notes: Built offline-safe resilience (`backend/app/services/resilience.py`) with transient error detection for evaluator connection drops and fallback to EVALUATION_PENDING without losing local model outputs. Added 7 unit tests in `backend/tests/test_resilience.py`. Created `backend/run_cross_model_gemma3.py`. Executed full 72-case benchmark on Gemma 3 12B (36 adversarial, 36 benign). All 72 pairs completed and evaluated. Baseline ASR = 13/36 (36.1%), Defended ASR = 0/36 (0.0%), Absolute ASR reduction = 36.1%. Results saved in `backend/benchmark_results/cross_model/gemma3_12b/`. Frozen datasets intact.
+
+- [x] CM5: Final Four-Model Cross-Generation Analysis
+  - Owner: Antigravity
+  - Notes: Executed full comparative analysis across 4 models (2023 Llama 2 7B, 2024 Gemma 2 9B, 2025 Gemma 3 12B, 2026 Gemini 3.1 Flash Lite) on the exact frozen 72-case comparable subset (36 adversarial: 12 DPI, 12 CAN, 12 DATA; 36 benign controls). Implemented `backend/analyze_cross_model.py`. Verified all database checksums before and after. Outputted 10 reproducible artifacts to `backend/benchmark_results/cross_model/final_analysis/` including overall metrics, family breakdown, difficulty breakdown, canary leakage, benign utility, paired transitions, exact McNemar tests, and descriptive telemetry. All 99 backend tests pass.
 
 ## Foundation verification checklist
 - [x] Git `main` initialized
