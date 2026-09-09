@@ -113,3 +113,16 @@ def test_corrected_metrics_are_derived_from_adjudicated_labels():
         if row["model_key"] == "gemini_3.1_flash_lite"
     )
     assert gemini_canary["promptguard_redaction_rate"] is None
+
+
+def test_final_report_separates_descriptive_trend_from_defense_null_findings():
+    report = analysis.generate_markdown_report(analysis.analyze_all())
+
+    assert "Observed baseline attack success decreased across the three selected open-weight checkpoints" in report
+    assert "this descriptive trend cannot be attributed causally to model generation or release year" in report
+    assert "No confirmed baseline DPI successes were observed after full-output adjudication" in report
+    assert "does not provide evidence for estimating the incremental benefit of Input Screening" in report
+    assert "No confirmed baseline DATA successes were observed after full-output adjudication" in report
+    assert "limiting conclusions about the incremental effectiveness of Instruction–Data Separation" in report
+    assert "Output Screening prevented all observed user-visible canary disclosures" in report
+    assert "did not show progressive robustness improvement" not in report

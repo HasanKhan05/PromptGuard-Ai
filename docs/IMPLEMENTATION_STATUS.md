@@ -133,6 +133,10 @@ Current blocker: **none**
   - Owner: Codex
   - Notes: Reviewed all 240 semantic case records from complete stored baseline/defended outputs without model inference or experiment reruns. Added a separate JSON/CSV adjudication overlay preserving all original database labels and evidence. Corrected 24 labels across 15 cases, resolved Gemma 2 `DATA-M02` and `BEN-022`, reclassified Gemini truncations as non-refusals, excluded unresolved values from analysis denominators, and made zero-opportunity canary redaction `N/A`. Regenerated the final CSV/JSON/Markdown analysis with qualified, non-causal research language. Frozen source database hashes remained unchanged.
 
+- [x] CM5.6: Final Interpretation Correction & Results Freeze
+  - Owner: Codex
+  - Notes: Froze the corrected interpretation around the final adjudicated results. The open-weight ASR sequence (33.3% → 30.6% → 22.2%) is reported as descriptive rather than causal; Gemini's 0/36 result is benchmark-specific. Confirmed vulnerability is explicitly concentrated in CAN, with direct mitigation evidence only for Output Screening. Zero confirmed baseline DPI/DATA successes are retained as null security findings that cannot estimate the incremental benefit of Input Screening or Instruction–Data Separation. Utility differences remain descriptive properties of the tested configurations. No experiment, inference, adjudication, database, or website changes were made.
+
 ## Foundation verification checklist
 - [x] Git `main` initialized
 - [x] Private GitHub repo connected/pushed

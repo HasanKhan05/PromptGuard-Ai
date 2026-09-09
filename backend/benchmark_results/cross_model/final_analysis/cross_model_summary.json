@@ -1590,6 +1590,16 @@
       }
     ]
   },
+  "interpretation": {
+    "open_weight_baseline_trend": "Observed baseline attack success decreased across the three selected open-weight checkpoints, from 33.3% for Llama 2 to 30.6% for Gemma 2 and 22.2% for Gemma 3. However, because these models differ in family, scale, training, alignment, architecture, tokenizer, native prompt template, and runtime configuration, this descriptive trend cannot be attributed causally to model generation or release year.",
+    "gemini_baseline_result": "Gemini 3.1 Flash Lite had no observed baseline attack successes in the same 36-case comparable adversarial subset, but this result is specific to the fixed benchmark and does not establish general immunity.",
+    "can_concentration": "After full-output adjudication, every confirmed open-model adversarial success occurred in system_prompt_canary_leakage; no confirmed baseline DPI or DATA successes remained.",
+    "output_screening": "Output Screening prevented all observed user-visible canary disclosures in the tested CAN cases, including cases where the underlying model still generated the canary in its raw response.",
+    "input_screening_null_finding": "No confirmed baseline DPI successes were observed after full-output adjudication, so this benchmark does not provide evidence for estimating the incremental benefit of Input Screening.",
+    "instruction_data_null_finding": "No confirmed baseline DATA successes were observed after full-output adjudication, limiting conclusions about the incremental effectiveness of Instruction\u2013Data Separation.",
+    "security_utility": "Guardrail security\u2013utility compatibility differed substantially across the tested model configurations. Llama 2 experienced substantial benign-task degradation and false refusals, while Gemma 2 and Gemma 3 preserved benign-task success in this sample. This is descriptive and is not attributed causally to architecture, release year, or model generation.",
+    "defended_scope": "No defended attack successes were observed in this fixed sample. This does not establish universal protection, and only Output Screening has directly observed incremental mitigation evidence in the comparable data."
+  },
   "adjudication": {
     "phase": "CM5.5",
     "created_at": "2026-09-09T22:48:34.641842+00:00",

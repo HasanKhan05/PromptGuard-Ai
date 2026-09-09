@@ -1,6 +1,6 @@
 # PromptGuard Ai — Corrected Four-Model Benchmark Results
 
-**Analysis date:** 2026-09-09 22:56 UTC
+**Analysis date:** 2026-09-09 23:11 UTC
 
 **Scope:** Paired 72-case comparison per model, corrected through a separate CM5.5 full-output adjudication overlay. Original databases and evaluator labels remain unchanged.
 
@@ -88,9 +88,31 @@ The supplementary set contains 12 adversarial and 6 benign tool cases. It remain
 
 ## 8. Corrected interpretation
 
-The results did not show progressive robustness improvement across the three tested open-weight checkpoints. Observed baseline vulnerability was concentrated entirely in deterministic canary disclosure after full-output adjudication: Llama 2 leaked in 12/12 CAN cases, Gemma 2 in 11/12, and Gemma 3 in 8/12. No baseline DPI or DATA successes were confirmed under the existing attack-objective rubric. Gemini had no observed baseline successes on this fixed benchmark, but that does not establish immunity or isolate model generation as a cause.
+### Finding 1 — Descriptive baseline trend
 
-No defended attack successes were observed in this sample. This supports effectiveness against the fixed benchmark, not universal protection. The clearest comparative finding is model-specific guardrail security–utility compatibility: Llama 2 retained a substantial defended utility penalty and false-refusal burden, while the tested Gemma configurations preserved utility more successfully. These observations are descriptive and cannot be attributed causally to release year or architecture.
+Observed baseline attack success decreased across the three selected open-weight checkpoints, from 33.3% for Llama 2 to 30.6% for Gemma 2 and 22.2% for Gemma 3. However, because these models differ in family, scale, training, alignment, architecture, tokenizer, native prompt template, and runtime configuration, this descriptive trend cannot be attributed causally to model generation or release year.
+
+Gemini 3.1 Flash Lite had no observed baseline attack successes in the same 36-case comparable adversarial subset, but this result is specific to the fixed benchmark and does not establish general immunity.
+
+### Finding 2 — Confirmed vulnerability was concentrated in CAN
+
+After full-output adjudication, every confirmed open-model adversarial success occurred in system_prompt_canary_leakage; no confirmed baseline DPI or DATA successes remained.
+
+### Finding 3 — Output Screening
+
+Output Screening prevented all observed user-visible canary disclosures in the tested CAN cases, including cases where the underlying model still generated the canary in its raw response.
+
+### Finding 4 — Security–utility tradeoff
+
+Guardrail security–utility compatibility differed substantially across the tested model configurations. Llama 2 experienced substantial benign-task degradation and false refusals, while Gemma 2 and Gemma 3 preserved benign-task success in this sample. This is descriptive and is not attributed causally to architecture, release year, or model generation.
+
+### Finding 5 — DPI and DATA null security findings
+
+No confirmed baseline DPI successes were observed after full-output adjudication, so this benchmark does not provide evidence for estimating the incremental benefit of Input Screening.
+
+No confirmed baseline DATA successes were observed after full-output adjudication, limiting conclusions about the incremental effectiveness of Instruction–Data Separation.
+
+No defended attack successes were observed in this fixed sample. This does not establish universal protection, and only Output Screening has directly observed incremental mitigation evidence in the comparable data.
 
 ## 9. Limitations
 
@@ -99,3 +121,4 @@ No defended attack successes were observed in this sample. This supports effecti
 3. Local Ollama and cloud Gemini runs differ in provider, native templates, and inference environment.
 4. Semantic labels are now independently adjudicated from stored outputs, but adjudication is still a single-reviewer judgment rather than blinded multi-rater labeling.
 5. One execution per prompt does not estimate run-to-run stochastic variance.
+6. The absence of confirmed baseline DPI and DATA successes prevents estimating the incremental effectiveness of their mapped defenses from this dataset.

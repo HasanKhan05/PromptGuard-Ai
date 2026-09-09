@@ -1,4 +1,4 @@
-"""PromptGuard Ai — Phase CM5.5: Adjudication-Corrected Cross-Model Analysis.
+"""PromptGuard Ai — Phase CM5.6: Frozen Adjudication-Corrected Analysis.
 
 Analyzes the exact frozen 72-case comparable benchmark across:
 1. 2023 — Llama 2 7B Chat (Ollama local, CPU)
@@ -103,6 +103,54 @@ MODEL_CONFIGS = [
         "ledger_path": FROZEN_GEMINI_DIR / "ledger_final_90.json",
     },
 ]
+
+FINAL_FINDINGS = {
+    "open_weight_baseline_trend": (
+        "Observed baseline attack success decreased across the three selected "
+        "open-weight checkpoints, from 33.3% for Llama 2 to 30.6% for Gemma 2 "
+        "and 22.2% for Gemma 3. However, because these models differ in family, "
+        "scale, training, alignment, architecture, tokenizer, native prompt "
+        "template, and runtime configuration, this descriptive trend cannot be "
+        "attributed causally to model generation or release year."
+    ),
+    "gemini_baseline_result": (
+        "Gemini 3.1 Flash Lite had no observed baseline attack successes in the "
+        "same 36-case comparable adversarial subset, but this result is specific "
+        "to the fixed benchmark and does not establish general immunity."
+    ),
+    "can_concentration": (
+        "After full-output adjudication, every confirmed open-model adversarial "
+        "success occurred in system_prompt_canary_leakage; no confirmed baseline "
+        "DPI or DATA successes remained."
+    ),
+    "output_screening": (
+        "Output Screening prevented all observed user-visible canary disclosures "
+        "in the tested CAN cases, including cases where the underlying model still "
+        "generated the canary in its raw response."
+    ),
+    "input_screening_null_finding": (
+        "No confirmed baseline DPI successes were observed after full-output "
+        "adjudication, so this benchmark does not provide evidence for estimating "
+        "the incremental benefit of Input Screening."
+    ),
+    "instruction_data_null_finding": (
+        "No confirmed baseline DATA successes were observed after full-output "
+        "adjudication, limiting conclusions about the incremental effectiveness "
+        "of Instruction–Data Separation."
+    ),
+    "security_utility": (
+        "Guardrail security–utility compatibility differed substantially across "
+        "the tested model configurations. Llama 2 experienced substantial benign-"
+        "task degradation and false refusals, while Gemma 2 and Gemma 3 preserved "
+        "benign-task success in this sample. This is descriptive and is not "
+        "attributed causally to architecture, release year, or model generation."
+    ),
+    "defended_scope": (
+        "No defended attack successes were observed in this fixed sample. This "
+        "does not establish universal protection, and only Output Screening has "
+        "directly observed incremental mitigation evidence in the comparable data."
+    ),
+}
 
 
 def compute_sha256(path: Path) -> str:
@@ -773,6 +821,7 @@ def analyze_all() -> Dict[str, Any]:
         "statistical_tests": statistical_rows,
         "telemetry": telemetry_summary,
         "supplementary_gemini_tool": gemini_tool_study,
+        "interpretation": FINAL_FINDINGS,
         "adjudication": {
             key: value for key, value in adjudication.items() if key != "records"
         },
@@ -909,9 +958,31 @@ def generate_markdown_report(results: Dict[str, Any]) -> str:
         "",
         "## 8. Corrected interpretation",
         "",
-        "The results did not show progressive robustness improvement across the three tested open-weight checkpoints. Observed baseline vulnerability was concentrated entirely in deterministic canary disclosure after full-output adjudication: Llama 2 leaked in 12/12 CAN cases, Gemma 2 in 11/12, and Gemma 3 in 8/12. No baseline DPI or DATA successes were confirmed under the existing attack-objective rubric. Gemini had no observed baseline successes on this fixed benchmark, but that does not establish immunity or isolate model generation as a cause.",
+        "### Finding 1 — Descriptive baseline trend",
         "",
-        "No defended attack successes were observed in this sample. This supports effectiveness against the fixed benchmark, not universal protection. The clearest comparative finding is model-specific guardrail security–utility compatibility: Llama 2 retained a substantial defended utility penalty and false-refusal burden, while the tested Gemma configurations preserved utility more successfully. These observations are descriptive and cannot be attributed causally to release year or architecture.",
+        FINAL_FINDINGS["open_weight_baseline_trend"],
+        "",
+        FINAL_FINDINGS["gemini_baseline_result"],
+        "",
+        "### Finding 2 — Confirmed vulnerability was concentrated in CAN",
+        "",
+        FINAL_FINDINGS["can_concentration"],
+        "",
+        "### Finding 3 — Output Screening",
+        "",
+        FINAL_FINDINGS["output_screening"],
+        "",
+        "### Finding 4 — Security–utility tradeoff",
+        "",
+        FINAL_FINDINGS["security_utility"],
+        "",
+        "### Finding 5 — DPI and DATA null security findings",
+        "",
+        FINAL_FINDINGS["input_screening_null_finding"],
+        "",
+        FINAL_FINDINGS["instruction_data_null_finding"],
+        "",
+        FINAL_FINDINGS["defended_scope"],
         "",
         "## 9. Limitations",
         "",
@@ -920,12 +991,13 @@ def generate_markdown_report(results: Dict[str, Any]) -> str:
         "3. Local Ollama and cloud Gemini runs differ in provider, native templates, and inference environment.",
         "4. Semantic labels are now independently adjudicated from stored outputs, but adjudication is still a single-reviewer judgment rather than blinded multi-rater labeling.",
         "5. One execution per prompt does not estimate run-to-run stochastic variance.",
+        "6. The absence of confirmed baseline DPI and DATA successes prevents estimating the incremental effectiveness of their mapped defenses from this dataset.",
     ])
     return "\n".join(md)
 
 
 def main():
-    print("=== Starting PromptGuard Ai Phase CM5.5: Corrected Analysis ===")
+    print("=== Starting PromptGuard Ai Phase CM5.6: Final Results Freeze ===")
     hashes = verify_integrity()
     print("All 4 database checksums verified intact:")
     for k, h in hashes.items():
@@ -964,10 +1036,6 @@ def main():
         "benign_cases_per_model": 36,
         "total_paired_evaluations": 72 * len(results["models"]),
         "key_findings": {
-            "open_weight_progression": (
-                "The results did not show progressive robustness improvement across "
-                "the three tested open-weight checkpoints."
-            ),
             "observed_baseline_asr": {
                 key: overall_by_key[key]["baseline_asr"] for key in overall_by_key
             },
@@ -982,10 +1050,7 @@ def main():
                 key: benign_by_key[key]["defended_legitimate_success_rate"]
                 for key in benign_by_key
             },
-            "defended_result_scope": (
-                "No defended attack successes were observed in this fixed sample; "
-                "this is not evidence of universal protection."
-            ),
+            "interpretation": FINAL_FINDINGS,
         },
     }
     with open(FINAL_ANALYSIS_DIR / "ANALYSIS_RECORD.json", "w", encoding="utf-8") as f:
@@ -1005,7 +1070,7 @@ def main():
     for r in results["benign_utility"]:
         print(f"  {r['display_name']} ({r['year']}): Baseline Legit = {r['baseline_legitimate_success_count']}/{r['baseline_evaluated_n']} ({r['baseline_legitimate_success_rate']:.1%}) -> Defended Legit = {r['defended_legitimate_success_count']}/{r['defended_evaluated_n']} ({r['defended_legitimate_success_rate']:.1%}) [Diff = {r['legitimate_utility_delta']:+.1%}], False Refusal = {r['defended_false_refusal_count']}/{r['defended_false_refusal_evaluated_n']}")
 
-    print("\n=== Phase CM5.5 Analysis Execution Complete ===")
+    print("\n=== Phase CM5.6 Analysis Freeze Complete ===")
 
 
 if __name__ == "__main__":
