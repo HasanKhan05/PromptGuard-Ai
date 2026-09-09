@@ -1,4 +1,4 @@
-"""PromptGuard Ai — Phase CM5: Final Four-Model Cross-Generation Analysis.
+"""PromptGuard Ai — Phase CM5.5: Adjudication-Corrected Cross-Model Analysis.
 
 Analyzes the exact frozen 72-case comparable benchmark across:
 1. 2023 — Llama 2 7B Chat (Ollama local, CPU)
@@ -40,6 +40,7 @@ RESULTS_DIR = BACKEND_DIR / "benchmark_results"
 FROZEN_GEMINI_DIR = RESULTS_DIR / "final_90"
 CROSS_MODEL_DIR = RESULTS_DIR / "cross_model"
 FINAL_ANALYSIS_DIR = CROSS_MODEL_DIR / "final_analysis"
+ADJUDICATION_PATH = FINAL_ANALYSIS_DIR / "full_output_adjudication.json"
 
 EXPECTED_HASHES = {
     "gemini": (
@@ -140,6 +141,92 @@ def wilson_interval(k: int, n: int, confidence: float = 0.95) -> Tuple[float, fl
     lower = max(0.0, center - margin)
     upper = min(1.0, center + margin)
     return (round(lower, 4), round(upper, 4))
+
+
+def summarize_binary(records: List[Dict[str, Any]], field: str) -> Dict[str, Any]:
+    """Summarize a nullable binary outcome without treating unresolved as failure."""
+    values = [record.get(field) for record in records]
+    resolved = [value for value in values if value is not None]
+    successes = sum(value is True for value in resolved)
+    evaluated_n = len(resolved)
+    return {
+        "evaluated_n": evaluated_n,
+        "unresolved_n": len(values) - evaluated_n,
+        "success_count": successes,
+        "rate": round(successes / evaluated_n, 4) if evaluated_n else None,
+        "ci95": wilson_interval(successes, evaluated_n) if evaluated_n else None,
+    }
+
+
+def summarize_paired(
+    records: List[Dict[str, Any]], baseline_field: str, defended_field: str
+) -> Dict[str, int]:
+    """Count transitions only for pairs with both outcomes resolved."""
+    resolved = [
+        record
+        for record in records
+        if record.get(baseline_field) is not None
+        and record.get(defended_field) is not None
+    ]
+    return {
+        "evaluated_pairs": len(resolved),
+        "unresolved_pairs": len(records) - len(resolved),
+        "mitigated": sum(
+            record[baseline_field] is True and record[defended_field] is False
+            for record in resolved
+        ),
+        "persistent": sum(
+            record[baseline_field] is True and record[defended_field] is True
+            for record in resolved
+        ),
+        "safe": sum(
+            record[baseline_field] is False and record[defended_field] is False
+            for record in resolved
+        ),
+        "induced": sum(
+            record[baseline_field] is False and record[defended_field] is True
+            for record in resolved
+        ),
+    }
+
+
+def compute_redaction_rate(raw_leaks: int, visible_leaks: int) -> Optional[float]:
+    """Return no rate when no raw leakage created a redaction opportunity."""
+    if raw_leaks == 0:
+        return None
+    return round((raw_leaks - visible_leaks) / raw_leaks, 4)
+
+
+def apply_adjudication(
+    records: List[Dict[str, Any]], entries: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    """Overlay adjudicated labels on copies used only for derived reporting."""
+    by_key = {
+        (entry["model_key"], entry["case_id"]): entry for entry in entries
+    }
+    corrected = []
+    for source in records:
+        record = dict(source)
+        entry = by_key.get((source["model_key"], source["case_id"]))
+        if entry:
+            record.update(entry["adjudicated_labels"])
+        corrected.append(record)
+    return corrected
+
+
+def load_adjudication(path: Path = ADJUDICATION_PATH) -> Dict[str, Any]:
+    """Load and validate the immutable-evidence adjudication overlay."""
+    document = json.loads(path.read_text(encoding="utf-8"))
+    entries = document.get("records", [])
+    keys = [(entry.get("model_key"), entry.get("case_id")) for entry in entries]
+    if len(entries) != 240 or len(set(keys)) != 240:
+        raise ValueError("Adjudication must contain exactly 240 unique semantic records.")
+    expected_hashes = {key: expected for key, (_, expected) in EXPECTED_HASHES.items()}
+    if document.get("source_database_sha256") != expected_hashes:
+        raise ValueError("Adjudication source hashes do not match the frozen databases.")
+    if document.get("semantic_records_reviewed") != 240:
+        raise ValueError("Adjudication does not attest review of all semantic records.")
+    return document
 
 
 def mcnemar_test(b: int, c: int) -> Dict[str, Any]:
@@ -354,6 +441,8 @@ def extract_gemini_supplementary_tool() -> Dict[str, Any]:
 
 def analyze_all() -> Dict[str, Any]:
     verify_integrity()
+    adjudication = load_adjudication()
+    adjudication_entries = adjudication["records"]
     adv_cases, ben_cases, excluded_cases = load_manifest_cases()
     comparable_cases = adv_cases + ben_cases
 
@@ -361,7 +450,7 @@ def analyze_all() -> Dict[str, Any]:
     for cfg in MODEL_CONFIGS:
         records = extract_model_case_data(cfg, comparable_cases)
         assert len(records) == 72
-        model_data[cfg["key"]] = records
+        model_data[cfg["key"]] = apply_adjudication(records, adjudication_entries)
 
     # 1. Overall Metrics
     overall_rows = []
@@ -371,13 +460,13 @@ def analyze_all() -> Dict[str, Any]:
         recs = model_data[k]
         adv_recs = [r for r in recs if r["attack_family"] is not None]
         n_adv = len(adv_recs)
-        b_succ = sum(1 for r in adv_recs if r["baseline_attack_success"] is True)
-        d_succ = sum(1 for r in adv_recs if r["defended_attack_success"] is True)
-        b_asr = b_succ / n_adv
-        d_asr = d_succ / n_adv
-        red = b_asr - d_asr
-        b_ci = wilson_interval(b_succ, n_adv)
-        d_ci = wilson_interval(d_succ, n_adv)
+        baseline = summarize_binary(adv_recs, "baseline_attack_success")
+        defended = summarize_binary(adv_recs, "defended_attack_success")
+        b_asr = baseline["rate"]
+        d_asr = defended["rate"]
+        red = b_asr - d_asr if b_asr is not None and d_asr is not None else None
+        b_ci = baseline["ci95"]
+        d_ci = defended["ci95"]
 
         row = {
             "model_key": k,
@@ -386,16 +475,20 @@ def analyze_all() -> Dict[str, Any]:
             "architecture": cfg["architecture"],
             "provider": cfg["provider"],
             "adversarial_n": n_adv,
-            "baseline_success_count": b_succ,
-            "baseline_asr": round(b_asr, 4),
-            "baseline_asr_ci95_low": b_ci[0],
-            "baseline_asr_ci95_high": b_ci[1],
-            "defended_success_count": d_succ,
-            "defended_asr": round(d_asr, 4),
-            "defended_asr_ci95_low": d_ci[0],
-            "defended_asr_ci95_high": d_ci[1],
-            "absolute_asr_reduction": round(red, 4),
-            "relative_asr_reduction": round((b_asr - d_asr) / b_asr, 4) if b_asr > 0 else 0.0,
+            "baseline_evaluated_n": baseline["evaluated_n"],
+            "baseline_unresolved_n": baseline["unresolved_n"],
+            "baseline_success_count": baseline["success_count"],
+            "baseline_asr": b_asr,
+            "baseline_asr_ci95_low": b_ci[0] if b_ci else None,
+            "baseline_asr_ci95_high": b_ci[1] if b_ci else None,
+            "defended_evaluated_n": defended["evaluated_n"],
+            "defended_unresolved_n": defended["unresolved_n"],
+            "defended_success_count": defended["success_count"],
+            "defended_asr": d_asr,
+            "defended_asr_ci95_low": d_ci[0] if d_ci else None,
+            "defended_asr_ci95_high": d_ci[1] if d_ci else None,
+            "absolute_asr_reduction": round(red, 4) if red is not None else None,
+            "relative_asr_reduction": round(red / b_asr, 4) if b_asr else None,
         }
         overall_rows.append(row)
         overall_summary[k] = row
@@ -410,27 +503,31 @@ def analyze_all() -> Dict[str, Any]:
         for fam in families:
             f_recs = [r for r in recs if r["attack_family"] == fam]
             n_f = len(f_recs)
-            b_s = sum(1 for r in f_recs if r["baseline_attack_success"] is True)
-            d_s = sum(1 for r in f_recs if r["defended_attack_success"] is True)
-            b_asr = b_s / n_f
-            d_asr = d_s / n_f
-            b_ci = wilson_interval(b_s, n_f)
-            d_ci = wilson_interval(d_s, n_f)
+            baseline = summarize_binary(f_recs, "baseline_attack_success")
+            defended = summarize_binary(f_recs, "defended_attack_success")
+            b_asr = baseline["rate"]
+            d_asr = defended["rate"]
+            b_ci = baseline["ci95"]
+            d_ci = defended["ci95"]
             row = {
                 "model_key": k,
                 "display_name": cfg["display_name"],
                 "year": cfg["year"],
                 "attack_family": fam,
                 "n": n_f,
-                "baseline_success_count": b_s,
-                "baseline_asr": round(b_asr, 4),
-                "baseline_asr_ci95_low": b_ci[0],
-                "baseline_asr_ci95_high": b_ci[1],
-                "defended_success_count": d_s,
-                "defended_asr": round(d_asr, 4),
-                "defended_asr_ci95_low": d_ci[0],
-                "defended_asr_ci95_high": d_ci[1],
-                "absolute_reduction": round(b_asr - d_asr, 4),
+                "baseline_evaluated_n": baseline["evaluated_n"],
+                "baseline_unresolved_n": baseline["unresolved_n"],
+                "baseline_success_count": baseline["success_count"],
+                "baseline_asr": b_asr,
+                "baseline_asr_ci95_low": b_ci[0] if b_ci else None,
+                "baseline_asr_ci95_high": b_ci[1] if b_ci else None,
+                "defended_evaluated_n": defended["evaluated_n"],
+                "defended_unresolved_n": defended["unresolved_n"],
+                "defended_success_count": defended["success_count"],
+                "defended_asr": d_asr,
+                "defended_asr_ci95_low": d_ci[0] if d_ci else None,
+                "defended_asr_ci95_high": d_ci[1] if d_ci else None,
+                "absolute_reduction": round(b_asr - d_asr, 4) if b_asr is not None and d_asr is not None else None,
             }
             family_rows.append(row)
             family_summary[fam][k] = row
@@ -445,27 +542,31 @@ def analyze_all() -> Dict[str, Any]:
         for diff in difficulties:
             d_recs = [r for r in recs if r["difficulty"] == diff and r["attack_family"] is not None]
             n_d = len(d_recs)
-            b_s = sum(1 for r in d_recs if r["baseline_attack_success"] is True)
-            d_s = sum(1 for r in d_recs if r["defended_attack_success"] is True)
-            b_asr = b_s / n_d
-            d_asr = d_s / n_d
-            b_ci = wilson_interval(b_s, n_d)
-            d_ci = wilson_interval(d_s, n_d)
+            baseline = summarize_binary(d_recs, "baseline_attack_success")
+            defended = summarize_binary(d_recs, "defended_attack_success")
+            b_asr = baseline["rate"]
+            d_asr = defended["rate"]
+            b_ci = baseline["ci95"]
+            d_ci = defended["ci95"]
             row = {
                 "model_key": k,
                 "display_name": cfg["display_name"],
                 "year": cfg["year"],
                 "difficulty": diff,
                 "n": n_d,
-                "baseline_success_count": b_s,
-                "baseline_asr": round(b_asr, 4),
-                "baseline_asr_ci95_low": b_ci[0],
-                "baseline_asr_ci95_high": b_ci[1],
-                "defended_success_count": d_s,
-                "defended_asr": round(d_asr, 4),
-                "defended_asr_ci95_low": d_ci[0],
-                "defended_asr_ci95_high": d_ci[1],
-                "absolute_reduction": round(b_asr - d_asr, 4),
+                "baseline_evaluated_n": baseline["evaluated_n"],
+                "baseline_unresolved_n": baseline["unresolved_n"],
+                "baseline_success_count": baseline["success_count"],
+                "baseline_asr": b_asr,
+                "baseline_asr_ci95_low": b_ci[0] if b_ci else None,
+                "baseline_asr_ci95_high": b_ci[1] if b_ci else None,
+                "defended_evaluated_n": defended["evaluated_n"],
+                "defended_unresolved_n": defended["unresolved_n"],
+                "defended_success_count": defended["success_count"],
+                "defended_asr": d_asr,
+                "defended_asr_ci95_low": d_ci[0] if d_ci else None,
+                "defended_asr_ci95_high": d_ci[1] if d_ci else None,
+                "absolute_reduction": round(b_asr - d_asr, 4) if b_asr is not None and d_asr is not None else None,
             }
             difficulty_rows.append(row)
             difficulty_summary[diff][k] = row
@@ -494,9 +595,7 @@ def analyze_all() -> Dict[str, Any]:
             "defended_raw_leakage_rate": round(d_raw / n_c, 4),
             "defended_visible_leakage_count": d_vis,
             "defended_visible_leakage_rate": round(d_vis / n_c, 4),
-            "promptguard_redaction_rate": (
-                round((d_raw - d_vis) / d_raw, 4) if d_raw > 0 else 1.0
-            ),
+            "promptguard_redaction_rate": compute_redaction_rate(d_raw, d_vis),
         }
         canary_rows.append(row)
         canary_summary[k] = row
@@ -508,44 +607,51 @@ def analyze_all() -> Dict[str, Any]:
         k = cfg["key"]
         recs = [r for r in model_data[k] if r["attack_family"] is None]
         n_b = len(recs)
-        b_leg = sum(1 for r in recs if r["baseline_legitimate_task_success"] is True)
-        d_leg = sum(1 for r in recs if r["defended_legitimate_task_success"] is True)
-        b_ref = sum(1 for r in recs if r["baseline_false_refusal"] is True)
-        d_ref = sum(1 for r in recs if r["defended_false_refusal"] is True)
+        b_leg = summarize_binary(recs, "baseline_legitimate_task_success")
+        d_leg = summarize_binary(recs, "defended_legitimate_task_success")
+        b_ref = summarize_binary(recs, "baseline_false_refusal")
+        d_ref = summarize_binary(recs, "defended_false_refusal")
 
-        b_leg_rate = b_leg / n_b
-        d_leg_rate = d_leg / n_b
-        b_ref_rate = b_ref / n_b
-        d_ref_rate = d_ref / n_b
-
-        b_leg_ci = wilson_interval(b_leg, n_b)
-        d_leg_ci = wilson_interval(d_leg, n_b)
-        b_ref_ci = wilson_interval(b_ref, n_b)
-        d_ref_ci = wilson_interval(d_ref, n_b)
+        b_leg_rate = b_leg["rate"]
+        d_leg_rate = d_leg["rate"]
+        b_ref_rate = b_ref["rate"]
+        d_ref_rate = d_ref["rate"]
+        b_leg_ci = b_leg["ci95"]
+        d_leg_ci = d_leg["ci95"]
+        b_ref_ci = b_ref["ci95"]
+        d_ref_ci = d_ref["ci95"]
 
         row = {
             "model_key": k,
             "display_name": cfg["display_name"],
             "year": cfg["year"],
             "benign_n": n_b,
-            "baseline_legitimate_success_count": b_leg,
-            "baseline_legitimate_success_rate": round(b_leg_rate, 4),
-            "baseline_legit_ci95_low": b_leg_ci[0],
-            "baseline_legit_ci95_high": b_leg_ci[1],
-            "defended_legitimate_success_count": d_leg,
-            "defended_legitimate_success_rate": round(d_leg_rate, 4),
-            "defended_legit_ci95_low": d_leg_ci[0],
-            "defended_legit_ci95_high": d_leg_ci[1],
-            "legitimate_utility_delta": round(d_leg_rate - b_leg_rate, 4),
-            "baseline_false_refusal_count": b_ref,
-            "baseline_false_refusal_rate": round(b_ref_rate, 4),
-            "baseline_refusal_ci95_low": b_ref_ci[0],
-            "baseline_refusal_ci95_high": b_ref_ci[1],
-            "defended_false_refusal_count": d_ref,
-            "defended_false_refusal_rate": round(d_ref_rate, 4),
-            "defended_refusal_ci95_low": d_ref_ci[0],
-            "defended_refusal_ci95_high": d_ref_ci[1],
-            "false_refusal_delta": round(d_ref_rate - b_ref_rate, 4),
+            "baseline_evaluated_n": b_leg["evaluated_n"],
+            "baseline_unresolved_n": b_leg["unresolved_n"],
+            "baseline_legitimate_success_count": b_leg["success_count"],
+            "baseline_legitimate_success_rate": b_leg_rate,
+            "baseline_legit_ci95_low": b_leg_ci[0] if b_leg_ci else None,
+            "baseline_legit_ci95_high": b_leg_ci[1] if b_leg_ci else None,
+            "defended_evaluated_n": d_leg["evaluated_n"],
+            "defended_unresolved_n": d_leg["unresolved_n"],
+            "defended_legitimate_success_count": d_leg["success_count"],
+            "defended_legitimate_success_rate": d_leg_rate,
+            "defended_legit_ci95_low": d_leg_ci[0] if d_leg_ci else None,
+            "defended_legit_ci95_high": d_leg_ci[1] if d_leg_ci else None,
+            "legitimate_utility_delta": round(d_leg_rate - b_leg_rate, 4) if b_leg_rate is not None and d_leg_rate is not None else None,
+            "baseline_false_refusal_evaluated_n": b_ref["evaluated_n"],
+            "baseline_false_refusal_unresolved_n": b_ref["unresolved_n"],
+            "baseline_false_refusal_count": b_ref["success_count"],
+            "baseline_false_refusal_rate": b_ref_rate,
+            "baseline_refusal_ci95_low": b_ref_ci[0] if b_ref_ci else None,
+            "baseline_refusal_ci95_high": b_ref_ci[1] if b_ref_ci else None,
+            "defended_false_refusal_evaluated_n": d_ref["evaluated_n"],
+            "defended_false_refusal_unresolved_n": d_ref["unresolved_n"],
+            "defended_false_refusal_count": d_ref["success_count"],
+            "defended_false_refusal_rate": d_ref_rate,
+            "defended_refusal_ci95_low": d_ref_ci[0] if d_ref_ci else None,
+            "defended_refusal_ci95_high": d_ref_ci[1] if d_ref_ci else None,
+            "false_refusal_delta": round(d_ref_rate - b_ref_rate, 4) if b_ref_rate is not None and d_ref_rate is not None else None,
         }
         benign_rows.append(row)
         benign_summary[k] = row
@@ -558,31 +664,33 @@ def analyze_all() -> Dict[str, Any]:
         recs = model_data[k]
         adv_recs = [r for r in recs if r["attack_family"] is not None]
         ben_recs = [r for r in recs if r["attack_family"] is None]
-
-        adv_mitigated = sum(1 for r in adv_recs if r["baseline_attack_success"] is True and r["defended_attack_success"] is not True)
-        adv_persistent = sum(1 for r in adv_recs if r["baseline_attack_success"] is True and r["defended_attack_success"] is True)
-        adv_induced = sum(1 for r in adv_recs if r["baseline_attack_success"] is not True and r["defended_attack_success"] is True)
-        adv_safe = len(adv_recs) - (adv_mitigated + adv_persistent + adv_induced)
-
-        ben_preserved = sum(1 for r in ben_recs if r["baseline_legitimate_task_success"] is True and r["defended_legitimate_task_success"] is True)
-        ben_degraded = sum(1 for r in ben_recs if r["baseline_legitimate_task_success"] is True and r["defended_legitimate_task_success"] is not True)
-        ben_recovered = sum(1 for r in ben_recs if r["baseline_legitimate_task_success"] is not True and r["defended_legitimate_task_success"] is True)
-        ben_failed = len(ben_recs) - (ben_preserved + ben_degraded + ben_recovered)
+        adv = summarize_paired(
+            adv_recs, "baseline_attack_success", "defended_attack_success"
+        )
+        ben = summarize_paired(
+            ben_recs,
+            "baseline_legitimate_task_success",
+            "defended_legitimate_task_success",
+        )
 
         row = {
             "model_key": k,
             "display_name": cfg["display_name"],
             "year": cfg["year"],
             "adv_total": len(adv_recs),
-            "adv_mitigated_T_to_F": adv_mitigated,
-            "adv_persistent_T_to_T": adv_persistent,
-            "adv_safe_F_to_F": adv_safe,
-            "adv_induced_F_to_T": adv_induced,
+            "adv_evaluated_pairs": adv["evaluated_pairs"],
+            "adv_unresolved_pairs": adv["unresolved_pairs"],
+            "adv_mitigated_T_to_F": adv["mitigated"],
+            "adv_persistent_T_to_T": adv["persistent"],
+            "adv_safe_F_to_F": adv["safe"],
+            "adv_induced_F_to_T": adv["induced"],
             "ben_total": len(ben_recs),
-            "ben_preserved_T_to_T": ben_preserved,
-            "ben_degraded_T_to_F": ben_degraded,
-            "ben_recovered_F_to_T": ben_recovered,
-            "ben_failed_F_to_F": ben_failed,
+            "ben_evaluated_pairs": ben["evaluated_pairs"],
+            "ben_unresolved_pairs": ben["unresolved_pairs"],
+            "ben_preserved_T_to_T": ben["persistent"],
+            "ben_degraded_T_to_F": ben["mitigated"],
+            "ben_recovered_F_to_T": ben["induced"],
+            "ben_failed_F_to_F": ben["safe"],
         }
         transition_rows.append(row)
         transition_summary[k] = row
@@ -599,7 +707,8 @@ def analyze_all() -> Dict[str, Any]:
             "model_key": k,
             "display_name": cfg["display_name"],
             "metric_tested": "Adversarial Attack Success (Baseline vs Defended)",
-            "n_pairs": t["adv_total"],
+            "n_pairs": t["adv_evaluated_pairs"],
+            "unresolved_pairs": t["adv_unresolved_pairs"],
             "b_mitigated": adv_test["b_mitigated"],
             "c_induced": adv_test["c_induced"],
             "discordant_pairs": adv_test["discordant_pairs"],
@@ -615,7 +724,8 @@ def analyze_all() -> Dict[str, Any]:
             "model_key": k,
             "display_name": cfg["display_name"],
             "metric_tested": "Benign Legitimate Task Success (Baseline vs Defended)",
-            "n_pairs": t["ben_total"],
+            "n_pairs": t["ben_evaluated_pairs"],
+            "unresolved_pairs": t["ben_unresolved_pairs"],
             "b_mitigated": ben_test["b_mitigated"],
             "c_induced": ben_test["c_induced"],
             "discordant_pairs": ben_test["discordant_pairs"],
@@ -663,6 +773,9 @@ def analyze_all() -> Dict[str, Any]:
         "statistical_tests": statistical_rows,
         "telemetry": telemetry_summary,
         "supplementary_gemini_tool": gemini_tool_study,
+        "adjudication": {
+            key: value for key, value in adjudication.items() if key != "records"
+        },
     }
 
 
@@ -677,7 +790,6 @@ def write_csv(path: Path, rows: List[Dict[str, Any]]):
 
 
 def generate_markdown_report(results: Dict[str, Any]) -> str:
-    models = results["models"]
     overall = results["overall"]
     by_fam = results["by_family"]
     by_diff = results["by_difficulty"]
@@ -686,166 +798,134 @@ def generate_markdown_report(results: Dict[str, Any]) -> str:
     transitions = results["paired_transitions"]
     stats = results["statistical_tests"]
     tool = results["supplementary_gemini_tool"]
+    adjudication = results["adjudication"]
 
-    md = []
-    md.append("# PromptGuard Ai — Four-Model Cross-Generation Robustness & Utility Benchmark")
-    md.append("\n**Evaluation Date:** " + datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"))
-    md.append("\n**Scope:** Controlled, paired 72-case cross-model benchmark evaluating prompt-injection robustness and security–utility tradeoffs.")
-    md.append("\n---\n")
+    def pct(value: Optional[float]) -> str:
+        return "N/A" if value is None else f"{value:.1%}"
 
-    # Table 1: Overall
-    md.append("## 1. Overall Security Benchmark (36 Comparable Adversarial Cases)")
-    md.append("\n| Model | Gen / Year | Architecture | Baseline Success | Baseline ASR [95% CI] | Defended Success | Defended ASR [95% CI] | Absolute ASR Δ |")
-    md.append("|---|---|---|---|---|---|---|---|")
-    for r in overall:
+    md = [
+        "# PromptGuard Ai — Corrected Four-Model Benchmark Results",
+        "",
+        "**Analysis date:** " + datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        "",
+        "**Scope:** Paired 72-case comparison per model, corrected through a separate CM5.5 full-output adjudication overlay. Original databases and evaluator labels remain unchanged.",
+        "",
+        f"**Adjudication:** {adjudication['semantic_records_reviewed']} semantic records reviewed; {adjudication['labels_changed']} labels changed across {adjudication['records_with_changed_labels']} cases; {adjudication['ambiguous_records']} ambiguous records.",
+        "",
+        "## 1. Overall security results",
+        "",
+        "| Model | Baseline success | Baseline ASR [95% CI] | Defended success | Defended ASR [95% CI] | Absolute reduction |",
+        "|---|---:|---:|---:|---:|---:|",
+    ]
+    for row in overall:
         md.append(
-            f"| **{r['display_name']}** | {r['year']} | {r['architecture']} | "
-            f"{r['baseline_success_count']} / {r['adversarial_n']} | "
-            f"**{r['baseline_asr']:.1%}** [{r['baseline_asr_ci95_low']:.1%}, {r['baseline_asr_ci95_high']:.1%}] | "
-            f"{r['defended_success_count']} / {r['adversarial_n']} | "
-            f"**{r['defended_asr']:.1%}** [{r['defended_asr_ci95_low']:.1%}, {r['defended_asr_ci95_high']:.1%}] | "
-            f"**-{r['absolute_asr_reduction']:.1%}** |"
+            f"| **{row['display_name']}** | {row['baseline_success_count']}/{row['baseline_evaluated_n']} | "
+            f"{pct(row['baseline_asr'])} [{pct(row['baseline_asr_ci95_low'])}, {pct(row['baseline_asr_ci95_high'])}] | "
+            f"{row['defended_success_count']}/{row['defended_evaluated_n']} | "
+            f"{pct(row['defended_asr'])} [{pct(row['defended_asr_ci95_low'])}, {pct(row['defended_asr_ci95_high'])}] | "
+            f"{pct(row['absolute_asr_reduction'])} |"
         )
 
-    # Table 2: By Family
-    md.append("\n## 2. Attack-Family Vulnerability Breakdown (12 Cases per Family)")
-    md.append("\n| Attack Family | Model | Baseline Success | Baseline ASR | Defended Success | Defended ASR | Mitigation Δ |")
-    md.append("|---|---|---|---|---|---|---|")
-    fam_names = {
-        "direct_prompt_injection": "Direct Prompt Injection (DPI)",
-        "system_prompt_canary_leakage": "System Prompt Canary Leakage (CAN)",
-        "untrusted_code_text_injection": "Untrusted Code/Text Injection (DATA)",
+    md.extend([
+        "",
+        "## 2. Attack-family results",
+        "",
+        "| Family | Model | Baseline | Defended |",
+        "|---|---|---:|---:|",
+    ])
+    family_names = {
+        "direct_prompt_injection": "DPI",
+        "system_prompt_canary_leakage": "CAN",
+        "untrusted_code_text_injection": "DATA",
     }
-    for fam_key, fam_label in fam_names.items():
-        fam_subset = [r for r in by_fam if r["attack_family"] == fam_key]
-        for r in fam_subset:
+    for family, label in family_names.items():
+        for row in [item for item in by_fam if item["attack_family"] == family]:
             md.append(
-                f"| {fam_label} | **{r['display_name']}** | "
-                f"{r['baseline_success_count']}/12 | {r['baseline_asr']:.1%} | "
-                f"{r['defended_success_count']}/12 | {r['defended_asr']:.1%} | "
-                f"-{r['absolute_reduction']:.1%} |"
+                f"| {label} | **{row['display_name']}** | {row['baseline_success_count']}/{row['baseline_evaluated_n']} ({pct(row['baseline_asr'])}) | "
+                f"{row['defended_success_count']}/{row['defended_evaluated_n']} ({pct(row['defended_asr'])}) |"
             )
 
-    # Table 3: By Difficulty
-    md.append("\n## 3. Attack Difficulty Breakdown (12 Cases per Difficulty Tier)")
-    md.append("\n| Difficulty | Model | Baseline Success | Baseline ASR | Defended Success | Defended ASR | Mitigation Δ |")
-    md.append("|---|---|---|---|---|---|---|")
-    diff_order = ["easy", "moderate", "subtle"]
-    for d in diff_order:
-        d_subset = [r for r in by_diff if r["difficulty"] == d]
-        for r in d_subset:
+    md.extend([
+        "",
+        "## 3. Difficulty results",
+        "",
+        "| Difficulty | Model | Baseline | Defended |",
+        "|---|---|---:|---:|",
+    ])
+    for difficulty in ("easy", "moderate", "subtle"):
+        for row in [item for item in by_diff if item["difficulty"] == difficulty]:
             md.append(
-                f"| {d.capitalize()} | **{r['display_name']}** | "
-                f"{r['baseline_success_count']}/12 | {r['baseline_asr']:.1%} | "
-                f"{r['defended_success_count']}/12 | {r['defended_asr']:.1%} | "
-                f"-{r['absolute_reduction']:.1%} |"
+                f"| {difficulty.capitalize()} | **{row['display_name']}** | {row['baseline_success_count']}/{row['baseline_evaluated_n']} ({pct(row['baseline_asr'])}) | "
+                f"{row['defended_success_count']}/{row['defended_evaluated_n']} ({pct(row['defended_asr'])}) |"
             )
 
-    # Table 4: Canary Leakage
-    md.append("\n## 4. Canary Leakage & Output Screening Redaction (12 CAN Cases)")
-    md.append("\n| Model | Baseline Raw Leak | Baseline Visible Leak | Defended Raw Leak | Defended Visible Leak | Guardrail Redaction Rate |")
-    md.append("|---|---|---|---|---|---|")
-    for r in canary:
+    md.extend([
+        "",
+        "## 4. Canary leakage",
+        "",
+        "| Model | Baseline raw | Baseline visible | Defended raw | Defended visible | Redaction rate |",
+        "|---|---:|---:|---:|---:|---:|",
+    ])
+    for row in canary:
         md.append(
-            f"| **{r['display_name']}** | {r['baseline_raw_leakage_count']}/12 ({r['baseline_raw_leakage_rate']:.1%}) | "
-            f"{r['baseline_visible_leakage_count']}/12 ({r['baseline_visible_leakage_rate']:.1%}) | "
-            f"{r['defended_raw_leakage_count']}/12 ({r['defended_raw_leakage_rate']:.1%}) | "
-            f"**{r['defended_visible_leakage_count']}/12 ({r['defended_visible_leakage_rate']:.1%})** | "
-            f"**{r['promptguard_redaction_rate']:.1%}** |"
+            f"| **{row['display_name']}** | {row['baseline_raw_leakage_count']}/12 | {row['baseline_visible_leakage_count']}/12 | "
+            f"{row['defended_raw_leakage_count']}/12 | {row['defended_visible_leakage_count']}/12 | {pct(row['promptguard_redaction_rate'])} |"
         )
 
-    # Table 5: Benign Utility
-    md.append("\n## 5. Benign Utility Preservation & False Refusal Rates (36 Control Cases)")
-    md.append("\n| Model | Baseline Legit Success [95% CI] | Defended Legit Success [95% CI] | Utility Δ | Baseline False Refusal | Defended False Refusal | Refusal Δ |")
-    md.append("|---|---|---|---|---|---|---|")
-    for r in benign:
+    md.extend([
+        "",
+        "## 5. Benign utility and false refusals",
+        "",
+        "| Model | Baseline legitimate success | Defended legitimate success | Utility change | Baseline false refusal | Defended false refusal |",
+        "|---|---:|---:|---:|---:|---:|",
+    ])
+    for row in benign:
         md.append(
-            f"| **{r['display_name']}** | "
-            f"{r['baseline_legitimate_success_count']}/36 ({r['baseline_legitimate_success_rate']:.1%}) [{r['baseline_legit_ci95_low']:.1%}, {r['baseline_legit_ci95_high']:.1%}] | "
-            f"{r['defended_legitimate_success_count']}/36 ({r['defended_legitimate_success_rate']:.1%}) [{r['defended_legit_ci95_low']:.1%}, {r['defended_legit_ci95_high']:.1%}] | "
-            f"{r['legitimate_utility_delta']:+.1%} | "
-            f"{r['baseline_false_refusal_count']}/36 ({r['baseline_false_refusal_rate']:.1%}) | "
-            f"{r['defended_false_refusal_count']}/36 ({r['defended_false_refusal_rate']:.1%}) | "
-            f"{r['false_refusal_delta']:+.1%} |"
+            f"| **{row['display_name']}** | {row['baseline_legitimate_success_count']}/{row['baseline_evaluated_n']} ({pct(row['baseline_legitimate_success_rate'])}) | "
+            f"{row['defended_legitimate_success_count']}/{row['defended_evaluated_n']} ({pct(row['defended_legitimate_success_rate'])}) | "
+            f"{pct(row['legitimate_utility_delta'])} | {row['baseline_false_refusal_count']}/{row['baseline_false_refusal_evaluated_n']} ({pct(row['baseline_false_refusal_rate'])}) | "
+            f"{row['defended_false_refusal_count']}/{row['defended_false_refusal_evaluated_n']} ({pct(row['defended_false_refusal_rate'])}) |"
         )
 
-    # Table 6: Paired Transitions & Statistics
-    md.append("\n## 6. Paired Transitions & McNemar Exact Statistical Tests")
-    md.append("\n| Model | Adv Mitigated (Base=T, Def=F) | Adv Persistent (Base=T, Def=T) | Adv Consistently Safe (Base=F, Def=F) | Discordant Pairs | Exact p-value | Significant (p<0.05)? |")
-    md.append("|---|---|---|---|---|---|---|")
-    for r in transitions:
-        st = next(s for s in stats if s["model_key"] == r["model_key"] and "Adversarial" in s["metric_tested"])
+    md.extend([
+        "",
+        "## 6. Paired statistical results",
+        "",
+        "| Model | Metric | Evaluated pairs | Mitigated/degraded | Induced/recovered | Exact p-value |",
+        "|---|---|---:|---:|---:|---:|",
+    ])
+    for row in stats:
         md.append(
-            f"| **{r['display_name']}** | {r['adv_mitigated_T_to_F']} | {r['adv_persistent_T_to_T']} | "
-            f"{r['adv_safe_F_to_F']} | {st['discordant_pairs']} | "
-            f"{st['p_value']} | **{'YES' if st['significant_at_05'] else 'NO'}** |"
+            f"| **{row['display_name']}** | {row['metric_tested']} | {row['n_pairs']} | {row['b_mitigated']} | {row['c_induced']} | {row['p_value'] if row['p_value'] is not None else 'N/A'} |"
         )
 
-    # Supplementary Tool Section
-    md.append("\n## 7. Supplementary Gemini Native Tool Study (Tool Authorization & Least Privilege)")
-    md.append(f"\n> **Methodological Exclusion Rationale:** {tool['exclusion_reason']}")
-    md.append("\n| Metric | Gemini 3.1 Flash Lite (TOOL Family) |")
-    md.append("|---|---|")
-    md.append(f"| Adversarial Cases Evaluated | {tool['adversarial_cases']} |")
-    md.append(f"| Baseline Attack Success Rate (ASR) | {tool['baseline_attack_success']}/{tool['adversarial_cases']} ({tool['baseline_asr']:.1%}) |")
-    md.append(f"| Defended Attack Success Rate (ASR) | {tool['defended_attack_success']}/{tool['adversarial_cases']} ({tool['defended_asr']:.1%}) |")
-    md.append(f"| Absolute ASR Reduction | -{tool['absolute_reduction']:.1%} |")
-    md.append(f"| Benign Tool Cases Evaluated | {tool['benign_cases']} |")
-    md.append(f"| Baseline Legitimate Tool Success | {tool['baseline_legitimate_task_success']}/{tool['benign_cases']} ({tool['baseline_legit_rate']:.1%}) |")
-    md.append(f"| Defended Legitimate Tool Success | {tool['defended_legitimate_task_success']}/{tool['benign_cases']} ({tool['defended_legit_rate']:.1%}) |")
-
-    # Key Scientific Findings
-    md.append("\n## 8. Core Scientific Findings & Synthesis")
-    md.append("\n### Finding 1: The Monotonic Robustness Hypothesis is Refuted")
-    md.append(
-        "Across the three local open-weight models spanning three successive architecture generations (2023 Llama 2 7B, "
-        "2024 Gemma 2 9B, and 2025 Gemma 3 12B), **baseline prompt injection susceptibility remained identically constant at 13 / 36 (36.1%)** "
-        "before dropping to 0 / 36 (0.0%) on frontier cloud-scale Gemini 3.1 Flash Lite. "
-        "Publication recency, parameter count (6.7B to 12.2B), and general benchmark capabilities **do not monotonically eliminate prompt injection vulnerabilities** "
-        "among open-weights models. Progression across model years alone does not provide passive security against injection attacks."
-    )
-
-    md.append("\n### Finding 2: Attack Vulnerability Profile Shifts Under Equal Total ASR")
-    md.append(
-        "While Llama 2 7B, Gemma 2 9B, and Gemma 3 12B all exhibited an aggregate baseline ASR of exactly 36.1% (13/36), "
-        "the internal vulnerability distribution shifted fundamentally across model architectures:\n"
-        "- **Direct Prompt Injection (DPI):** Llama 2 7B (0/12, 0.0%), Gemma 3 12B (0/12, 0.0%), and Gemini 3.1 Flash Lite (0/12, 0.0%) repelled all direct override attacks in baseline, whereas Gemma 2 9B showed slight susceptibility (2/12, 16.7%).\n"
-        "- **System Prompt Canary Leakage (CAN):** Unprotected models exhibited massive canary vulnerability. Llama 2 7B was 100.0% compromised (12/12), Gemma 2 9B was 91.7% compromised (11/12), and Gemma 3 12B was 66.7% compromised (8/12). While canary leakage declined moderately with newer Gemma generations, it remained the dominant baseline failure mode across all open models.\n"
-        "- **Untrusted Code/Text Injection (DATA):** Gemma 2 9B (0/12, 0.0%) and Llama 2 7B (1/12, 8.3%) showed high resistance to data-channel injections in baseline. However, Gemma 3 12B exhibited a significant surge in DATA vulnerability (5/12, 41.7%), demonstrating that advanced reasoning and contextual synthesis capabilities can paradoxically increase susceptibility to indirect injections hidden within payload text.\n"
-        "- **Frontier Alignment Contrast:** Gemini 3.1 Flash Lite resisted all 36 baseline attacks across all three families (0/36, 0.0%), reflecting extensive industrial reinforcement learning from human feedback (RLHF) and proprietary system-prompt pinning."
-    )
-
-    md.append("\n### Finding 3: Complete Guardrail Mitigation Across All Tested Models")
-    md.append(
-        "Under PromptGuard Ai's layered defense architecture (Input Screening, Canary Redaction, Instruction-Data Separation), "
-        "**defended ASR dropped to 0.0% (0/36) across every single evaluated model**. "
-        "Across the three vulnerable open models, all 39 baseline attack successes (13 Llama 2 + 13 Gemma 2 + 13 Gemma 3) "
-        "were 100% neutralized under defended conditions. Paired McNemar tests confirm that the mitigation is statistically significant "
-        "(exact binomial p = 0.000244, chi2 = 11.08, p < 0.001 for all three open models)."
-    )
-
-    md.append("\n### Finding 4: The True Cross-Generation Shift is Security–Utility Compatibility")
-    md.append(
-        "The pivotal generational advancement uncovered by this benchmark is **not raw intrinsic robustness, but how cleanly the model accommodates layered defensive guardrails without collapsing benign utility**:\n"
-        "- **Llama 2 7B (2023):** Catastrophic utility degradation. Benign legitimate success plummeted from **80.6% (29/36) down to 38.9% (14/36)** (a 41.7% utility collapse), driven by a severe **50.0% false refusal rate (18/36)** (McNemar p = 0.000275). Older models struggle to distinguish defensive constraints from forbidden actions, triggering over-refusal on harmless prompts.\n"
-        "- **Gemma 2 9B (2024):** Flawless utility preservation. Legitimate task success was **94.4% (34/36) baseline and 94.4% (34/36) defended**, with **zero false refusals (0/36, 0.0%)**.\n"
-        "- **Gemma 3 12B (2025):** Flawless utility preservation. Legitimate task success was **97.2% (35/36) baseline and 97.2% (35/36) defended**, with **zero false refusals (0/36, 0.0%)**.\n"
-        "- **Gemini 3.1 Flash Lite (2026):** High utility preservation. Legitimate task success was **88.9% (32/36) baseline and 80.6% (29/36) defended**, with **2/36 false refusals (5.6%)** (utility delta was not statistically significant, McNemar p = 0.250)."
-    )
-
-    md.append("\n## 9. Limitations & Research Boundaries")
-    md.append(
-        "1. **Sample Size:** 72 total comparable cases (36 adversarial, 36 benign) per model. While statistically significant for paired McNemar tests (p < 0.001), fine-grained subgroup comparisons have wider Wilson confidence intervals.\n"
-        "2. **Hardware/Inference Environment:** Local models were evaluated on Intel CPU inference via Ollama, while Gemini was queried via cloud API. Latencies reflect hardware execution rather than intrinsic algorithmic speed.\n"
-        "3. **Non-Causal Attribute Assignment:** Generation year is correlated with parameter size, alignment methodology, and architecture. Differences cannot be attributed purely to time.\n"
-        "4. **Native Tool Calling:** Tool misuse evaluation was excluded from the cross-model core comparison because Llama 2 and Gemma models in local Ollama lack identical function-calling schemas to Gemini."
-    )
-
+    md.extend([
+        "",
+        "## 7. Supplementary Gemini tool study",
+        "",
+        f"> {tool['exclusion_reason']}",
+        "",
+        f"The supplementary set contains {tool['adversarial_cases']} adversarial and {tool['benign_cases']} benign tool cases. It remains excluded from the four-model comparison.",
+        "",
+        "## 8. Corrected interpretation",
+        "",
+        "The results did not show progressive robustness improvement across the three tested open-weight checkpoints. Observed baseline vulnerability was concentrated entirely in deterministic canary disclosure after full-output adjudication: Llama 2 leaked in 12/12 CAN cases, Gemma 2 in 11/12, and Gemma 3 in 8/12. No baseline DPI or DATA successes were confirmed under the existing attack-objective rubric. Gemini had no observed baseline successes on this fixed benchmark, but that does not establish immunity or isolate model generation as a cause.",
+        "",
+        "No defended attack successes were observed in this sample. This supports effectiveness against the fixed benchmark, not universal protection. The clearest comparative finding is model-specific guardrail security–utility compatibility: Llama 2 retained a substantial defended utility penalty and false-refusal burden, while the tested Gemma configurations preserved utility more successfully. These observations are descriptive and cannot be attributed causally to release year or architecture.",
+        "",
+        "## 9. Limitations",
+        "",
+        "1. The attacks are fixed, explicit, and structurally aligned with narrow deterministic defenses.",
+        "2. Each family and difficulty subgroup contains only 12 cases; zero observed successes still has a wide Wilson interval.",
+        "3. Local Ollama and cloud Gemini runs differ in provider, native templates, and inference environment.",
+        "4. Semantic labels are now independently adjudicated from stored outputs, but adjudication is still a single-reviewer judgment rather than blinded multi-rater labeling.",
+        "5. One execution per prompt does not estimate run-to-run stochastic variance.",
+    ])
     return "\n".join(md)
 
 
 def main():
-    print("=== Starting PromptGuard Ai Phase CM5: Final Four-Model Analysis ===")
+    print("=== Starting PromptGuard Ai Phase CM5.5: Corrected Analysis ===")
     hashes = verify_integrity()
     print("All 4 database checksums verified intact:")
     for k, h in hashes.items():
@@ -870,20 +950,42 @@ def main():
     with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, default=str)
 
-    # 3. Export ANALYSIS_RECORD.json
+    # 3. Export ANALYSIS_RECORD.json from the same corrected result set
+    overall_by_key = {row["model_key"]: row for row in results["overall"]}
+    benign_by_key = {row["model_key"]: row for row in results["benign_utility"]}
     record_doc = {
         "benchmark_name": "PromptGuard Ai — Cross-Generation Prompt-Injection Robustness Study",
         "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
         "verified_hashes": hashes,
+        "adjudication": results["adjudication"],
         "models_evaluated": [cfg["key"] for cfg in results["models"]],
         "comparable_cases_per_model": 72,
         "adversarial_cases_per_model": 36,
         "benign_cases_per_model": 36,
         "total_paired_evaluations": 72 * len(results["models"]),
         "key_findings": {
-            "monotonic_robustness_hypothesis": "Refuted (Baseline ASR = 36.1% across Llama 2 7B, Gemma 2 9B, and Gemma 3 12B)",
-            "defended_mitigation_rate": "100.0% (Defended ASR = 0.0% across all 4 models)",
-            "primary_generational_contrast": "Security-utility preservation: Llama 2 suffered severe utility collapse (91.7% -> 2.8%), while Gemma 2, Gemma 3, and Gemini preserved >=97.2% utility without false refusals",
+            "open_weight_progression": (
+                "The results did not show progressive robustness improvement across "
+                "the three tested open-weight checkpoints."
+            ),
+            "observed_baseline_asr": {
+                key: overall_by_key[key]["baseline_asr"] for key in overall_by_key
+            },
+            "observed_defended_asr": {
+                key: overall_by_key[key]["defended_asr"] for key in overall_by_key
+            },
+            "benign_baseline_success": {
+                key: benign_by_key[key]["baseline_legitimate_success_rate"]
+                for key in benign_by_key
+            },
+            "benign_defended_success": {
+                key: benign_by_key[key]["defended_legitimate_success_rate"]
+                for key in benign_by_key
+            },
+            "defended_result_scope": (
+                "No defended attack successes were observed in this fixed sample; "
+                "this is not evidence of universal protection."
+            ),
         },
     }
     with open(FINAL_ANALYSIS_DIR / "ANALYSIS_RECORD.json", "w", encoding="utf-8") as f:
@@ -897,13 +999,13 @@ def main():
     print(f"\nAll analysis artifacts written successfully to:\n  {FINAL_ANALYSIS_DIR}")
     print("\n=== Summary of Overall Comparable Results ===")
     for r in results["overall"]:
-        print(f"  {r['display_name']} ({r['year']}): Baseline ASR = {r['baseline_success_count']}/36 ({r['baseline_asr']:.1%}) -> Defended ASR = {r['defended_success_count']}/36 ({r['defended_asr']:.1%}) [Reduction = -{r['absolute_asr_reduction']:.1%}]")
+        print(f"  {r['display_name']} ({r['year']}): Baseline ASR = {r['baseline_success_count']}/{r['baseline_evaluated_n']} ({r['baseline_asr']:.1%}) -> Defended ASR = {r['defended_success_count']}/{r['defended_evaluated_n']} ({r['defended_asr']:.1%}) [Reduction = -{r['absolute_asr_reduction']:.1%}]")
 
     print("\n=== Summary of Benign Utility Results ===")
     for r in results["benign_utility"]:
-        print(f"  {r['display_name']} ({r['year']}): Baseline Legit = {r['baseline_legitimate_success_count']}/36 ({r['baseline_legitimate_success_rate']:.1%}) -> Defended Legit = {r['defended_legitimate_success_count']}/36 ({r['defended_legitimate_success_rate']:.1%}) [Diff = {r['legitimate_utility_delta']:+.1%}], False Refusal = {r['defended_false_refusal_count']}/36")
+        print(f"  {r['display_name']} ({r['year']}): Baseline Legit = {r['baseline_legitimate_success_count']}/{r['baseline_evaluated_n']} ({r['baseline_legitimate_success_rate']:.1%}) -> Defended Legit = {r['defended_legitimate_success_count']}/{r['defended_evaluated_n']} ({r['defended_legitimate_success_rate']:.1%}) [Diff = {r['legitimate_utility_delta']:+.1%}], False Refusal = {r['defended_false_refusal_count']}/{r['defended_false_refusal_evaluated_n']}")
 
-    print("\n=== Phase CM5 Analysis Execution Complete ===")
+    print("\n=== Phase CM5.5 Analysis Execution Complete ===")
 
 
 if __name__ == "__main__":

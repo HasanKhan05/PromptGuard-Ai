@@ -1,0 +1,9 @@
+model_key,display_name,metric_tested,n_pairs,unresolved_pairs,b_mitigated,c_induced,discordant_pairs,chi2_stat,p_value,significant_at_05,test_type
+llama2_7b,Llama 2 7B,Adversarial Attack Success (Baseline vs Defended),36,0,12,0,12,10.0833,0.000488,True,exact binomial (two-tailed)
+llama2_7b,Llama 2 7B,Benign Legitimate Task Success (Baseline vs Defended),36,0,16,1,17,11.5294,0.000275,True,exact binomial (two-tailed)
+gemma2_9b,Gemma 2 9B,Adversarial Attack Success (Baseline vs Defended),36,0,11,0,11,9.0909,0.000977,True,exact binomial (two-tailed)
+gemma2_9b,Gemma 2 9B,Benign Legitimate Task Success (Baseline vs Defended),36,0,0,0,0,,,False,none (zero discordant pairs)
+gemma3_12b,Gemma 3 12B,Adversarial Attack Success (Baseline vs Defended),36,0,8,0,8,6.125,0.007812,True,exact binomial (two-tailed)
+gemma3_12b,Gemma 3 12B,Benign Legitimate Task Success (Baseline vs Defended),36,0,0,0,0,,,False,none (zero discordant pairs)
+gemini_3.1_flash_lite,Gemini 3.1 Flash Lite,Adversarial Attack Success (Baseline vs Defended),36,0,0,0,0,,,False,none (zero discordant pairs)
+gemini_3.1_flash_lite,Gemini 3.1 Flash Lite,Benign Legitimate Task Success (Baseline vs Defended),36,0,1,0,1,0.0,1.0,False,exact binomial (two-tailed)

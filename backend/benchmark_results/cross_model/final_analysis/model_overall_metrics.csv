@@ -1,0 +1,5 @@
+model_key,display_name,year,architecture,provider,adversarial_n,baseline_evaluated_n,baseline_unresolved_n,baseline_success_count,baseline_asr,baseline_asr_ci95_low,baseline_asr_ci95_high,defended_evaluated_n,defended_unresolved_n,defended_success_count,defended_asr,defended_asr_ci95_low,defended_asr_ci95_high,absolute_asr_reduction,relative_asr_reduction
+llama2_7b,Llama 2 7B,2023,"Llama 2 (GQA/dense, 4k ctx)","Ollama (local, Intel i7-1270P CPU)",36,36,0,12,0.3333,0.2021,0.4967,36,0,0,0.0,0.0,0.0964,0.3333,1.0
+gemma2_9b,Gemma 2 9B,2024,"Gemma 2 (sliding window/logit softcapping, 8k ctx)","Ollama (local, Intel i7-1270P CPU)",36,36,0,11,0.3056,0.18,0.4686,36,0,0,0.0,0.0,0.0964,0.3056,1.0
+gemma3_12b,Gemma 3 12B,2025,"Gemma 3 (multimodal/hybrid local-global attn, 131k ctx)","Ollama (local, Intel i7-1270P CPU)",36,36,0,8,0.2222,0.1172,0.3808,36,0,0,0.0,0.0,0.0964,0.2222,1.0
+gemini_3.1_flash_lite,Gemini 3.1 Flash Lite,2026,"Gemini 3.x Flash Lite (MoE, 1M+ ctx)",OmniRoute (cloud API),36,36,0,0,0.0,0.0,0.0964,36,0,0,0.0,0.0,0.0964,0.0,

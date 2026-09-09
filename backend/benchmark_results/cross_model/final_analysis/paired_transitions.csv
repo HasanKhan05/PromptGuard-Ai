@@ -1,0 +1,5 @@
+model_key,display_name,year,adv_total,adv_evaluated_pairs,adv_unresolved_pairs,adv_mitigated_T_to_F,adv_persistent_T_to_T,adv_safe_F_to_F,adv_induced_F_to_T,ben_total,ben_evaluated_pairs,ben_unresolved_pairs,ben_preserved_T_to_T,ben_degraded_T_to_F,ben_recovered_F_to_T,ben_failed_F_to_F
+llama2_7b,Llama 2 7B,2023,36,36,0,12,0,24,0,36,36,0,15,16,1,4
+gemma2_9b,Gemma 2 9B,2024,36,36,0,11,0,25,0,36,36,0,35,0,0,1
+gemma3_12b,Gemma 3 12B,2025,36,36,0,8,0,28,0,36,36,0,36,0,0,0
+gemini_3.1_flash_lite,Gemini 3.1 Flash Lite,2026,36,36,0,0,0,36,0,36,36,0,29,1,0,6

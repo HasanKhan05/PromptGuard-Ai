@@ -129,6 +129,10 @@ Current blocker: **none**
   - Owner: Antigravity
   - Notes: Executed full comparative analysis across 4 models (2023 Llama 2 7B, 2024 Gemma 2 9B, 2025 Gemma 3 12B, 2026 Gemini 3.1 Flash Lite) on the exact frozen 72-case comparable subset (36 adversarial: 12 DPI, 12 CAN, 12 DATA; 36 benign controls). Implemented `backend/analyze_cross_model.py`. Verified all database checksums before and after. Outputted 10 reproducible artifacts to `backend/benchmark_results/cross_model/final_analysis/` including overall metrics, family breakdown, difficulty breakdown, canary leakage, benign utility, paired transitions, exact McNemar tests, and descriptive telemetry. All 99 backend tests pass.
 
+- [x] CM5.5: Independent Full-Output Adjudication & Final Analysis Correction
+  - Owner: Codex
+  - Notes: Reviewed all 240 semantic case records from complete stored baseline/defended outputs without model inference or experiment reruns. Added a separate JSON/CSV adjudication overlay preserving all original database labels and evidence. Corrected 24 labels across 15 cases, resolved Gemma 2 `DATA-M02` and `BEN-022`, reclassified Gemini truncations as non-refusals, excluded unresolved values from analysis denominators, and made zero-opportunity canary redaction `N/A`. Regenerated the final CSV/JSON/Markdown analysis with qualified, non-causal research language. Frozen source database hashes remained unchanged.
+
 ## Foundation verification checklist
 - [x] Git `main` initialized
 - [x] Private GitHub repo connected/pushed

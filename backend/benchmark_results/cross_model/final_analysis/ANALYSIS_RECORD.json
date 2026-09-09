@@ -1,0 +1,65 @@
+{
+  "benchmark_name": "PromptGuard Ai \u2014 Cross-Generation Prompt-Injection Robustness Study",
+  "analysis_timestamp": "2026-09-09T22:56:44.041059+00:00",
+  "verified_hashes": {
+    "gemini": "d3fa0c1b413366bf4b8777d142f06e3b3484dc745ecc830831b1f7e7d4684bb2",
+    "llama2": "11748da3741ee50c0366342f125da73887c1b391420123f1120397b20106f0cc",
+    "gemma2": "f0d01ae179f217ac2058dc68f484c0187e625ba2f826b9bd05af20e5dc4ef10f",
+    "gemma3": "619e48de595fb0fdc7d0eba4f29648b0b67567f40df5e9238a120bce23e1cd79"
+  },
+  "adjudication": {
+    "phase": "CM5.5",
+    "created_at": "2026-09-09T22:48:34.641842+00:00",
+    "review_method": "Independent review of complete stored baseline and defended outputs using the existing evaluator rubric; no model inference.",
+    "reviewer": "Codex independent full-output adjudication",
+    "source_database_sha256": {
+      "gemini": "d3fa0c1b413366bf4b8777d142f06e3b3484dc745ecc830831b1f7e7d4684bb2",
+      "llama2": "11748da3741ee50c0366342f125da73887c1b391420123f1120397b20106f0cc",
+      "gemma2": "f0d01ae179f217ac2058dc68f484c0187e625ba2f826b9bd05af20e5dc4ef10f",
+      "gemma3": "619e48de595fb0fdc7d0eba4f29648b0b67567f40df5e9238a120bce23e1cd79"
+    },
+    "semantic_records_reviewed": 240,
+    "records_with_changed_labels": 15,
+    "labels_changed": 24,
+    "ambiguous_records": 0,
+    "can_deterministic_records_excluded": 48
+  },
+  "models_evaluated": [
+    "llama2_7b",
+    "gemma2_9b",
+    "gemma3_12b",
+    "gemini_3.1_flash_lite"
+  ],
+  "comparable_cases_per_model": 72,
+  "adversarial_cases_per_model": 36,
+  "benign_cases_per_model": 36,
+  "total_paired_evaluations": 288,
+  "key_findings": {
+    "open_weight_progression": "The results did not show progressive robustness improvement across the three tested open-weight checkpoints.",
+    "observed_baseline_asr": {
+      "llama2_7b": 0.3333,
+      "gemma2_9b": 0.3056,
+      "gemma3_12b": 0.2222,
+      "gemini_3.1_flash_lite": 0.0
+    },
+    "observed_defended_asr": {
+      "llama2_7b": 0.0,
+      "gemma2_9b": 0.0,
+      "gemma3_12b": 0.0,
+      "gemini_3.1_flash_lite": 0.0
+    },
+    "benign_baseline_success": {
+      "llama2_7b": 0.8611,
+      "gemma2_9b": 0.9722,
+      "gemma3_12b": 1.0,
+      "gemini_3.1_flash_lite": 0.8333
+    },
+    "benign_defended_success": {
+      "llama2_7b": 0.4444,
+      "gemma2_9b": 0.9722,
+      "gemma3_12b": 1.0,
+      "gemini_3.1_flash_lite": 0.8056
+    },
+    "defended_result_scope": "No defended attack successes were observed in this fixed sample; this is not evidence of universal protection."
+  }
+}

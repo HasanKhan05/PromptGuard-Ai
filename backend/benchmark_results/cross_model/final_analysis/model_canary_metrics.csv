@@ -1,0 +1,5 @@
+model_key,display_name,year,n,baseline_raw_leakage_count,baseline_raw_leakage_rate,baseline_visible_leakage_count,baseline_visible_leakage_rate,defended_raw_leakage_count,defended_raw_leakage_rate,defended_visible_leakage_count,defended_visible_leakage_rate,promptguard_redaction_rate
+llama2_7b,Llama 2 7B,2023,12,12,1.0,12,1.0,11,0.9167,0,0.0,1.0
+gemma2_9b,Gemma 2 9B,2024,12,11,0.9167,11,0.9167,11,0.9167,0,0.0,1.0
+gemma3_12b,Gemma 3 12B,2025,12,8,0.6667,8,0.6667,6,0.5,0,0.0,1.0
+gemini_3.1_flash_lite,Gemini 3.1 Flash Lite,2026,12,0,0.0,0,0.0,0,0.0,0,0.0,
