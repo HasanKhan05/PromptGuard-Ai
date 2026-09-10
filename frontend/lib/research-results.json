@@ -1,0 +1,131 @@
+{
+  "models": [
+    {
+      "key": "llama2",
+      "name": "Llama 2",
+      "fullName": "Llama 2 7B",
+      "year": 2023,
+      "accent": "pink",
+      "baselineAttackSuccesses": 12,
+      "defendedAttackSuccesses": 0,
+      "baselineAsr": 33.3,
+      "baselineRawCanary": 12,
+      "baselineVisibleCanary": 12,
+      "defendedRawCanary": 11,
+      "defendedVisibleCanary": 0,
+      "baselineUtility": 86.1,
+      "defendedUtility": 44.4,
+      "baselineUtilityCount": 31,
+      "defendedUtilityCount": 16,
+      "defendedFalseRefusal": 50,
+      "defendedFalseRefusalCount": 18
+    },
+    {
+      "key": "gemma2",
+      "name": "Gemma 2",
+      "fullName": "Gemma 2 9B",
+      "year": 2024,
+      "accent": "amber",
+      "baselineAttackSuccesses": 11,
+      "defendedAttackSuccesses": 0,
+      "baselineAsr": 30.6,
+      "baselineRawCanary": 11,
+      "baselineVisibleCanary": 11,
+      "defendedRawCanary": 11,
+      "defendedVisibleCanary": 0,
+      "baselineUtility": 97.2,
+      "defendedUtility": 97.2,
+      "baselineUtilityCount": 35,
+      "defendedUtilityCount": 35,
+      "defendedFalseRefusal": 0,
+      "defendedFalseRefusalCount": 0
+    },
+    {
+      "key": "gemma3",
+      "name": "Gemma 3",
+      "fullName": "Gemma 3 12B",
+      "year": 2025,
+      "accent": "purple",
+      "baselineAttackSuccesses": 8,
+      "defendedAttackSuccesses": 0,
+      "baselineAsr": 22.2,
+      "baselineRawCanary": 8,
+      "baselineVisibleCanary": 8,
+      "defendedRawCanary": 6,
+      "defendedVisibleCanary": 0,
+      "baselineUtility": 100,
+      "defendedUtility": 100,
+      "baselineUtilityCount": 36,
+      "defendedUtilityCount": 36,
+      "defendedFalseRefusal": 0,
+      "defendedFalseRefusalCount": 0
+    },
+    {
+      "key": "gemini",
+      "name": "Gemini",
+      "fullName": "Gemini 3.1 Flash Lite",
+      "year": 2026,
+      "accent": "green",
+      "baselineAttackSuccesses": 0,
+      "defendedAttackSuccesses": 0,
+      "baselineAsr": 0,
+      "baselineRawCanary": 0,
+      "baselineVisibleCanary": 0,
+      "defendedRawCanary": 0,
+      "defendedVisibleCanary": 0,
+      "baselineUtility": 83.3,
+      "defendedUtility": 80.6,
+      "baselineUtilityCount": 30,
+      "defendedUtilityCount": 29,
+      "defendedFalseRefusal": 0,
+      "defendedFalseRefusalCount": 0
+    }
+  ],
+  "attackFamilies": [
+    {
+      "key": "dpi",
+      "name": "Direct Prompt Injection",
+      "baselineSuccesses": [0, 0, 0, 0],
+      "defendedSuccesses": [0, 0, 0, 0]
+    },
+    {
+      "key": "can",
+      "name": "Canary Leakage",
+      "baselineSuccesses": [12, 11, 8, 0],
+      "defendedSuccesses": [0, 0, 0, 0]
+    },
+    {
+      "key": "data",
+      "name": "Untrusted Code / Text",
+      "baselineSuccesses": [0, 0, 0, 0],
+      "defendedSuccesses": [0, 0, 0, 0]
+    }
+  ],
+  "defenseVerdicts": {
+    "outputScreening": {
+      "status": "demonstrated",
+      "title": "Output Screening",
+      "description": "Prevented all observed user-visible canary disclosures in the tested CAN sample.",
+      "evidence": "Observed mitigation evidence"
+    },
+    "inputScreening": {
+      "status": "null",
+      "title": "Input Screening",
+      "description": "No confirmed baseline DPI successes; incremental security benefit cannot be estimated.",
+      "evidence": "No measurable baseline attack set"
+    },
+    "instructionData": {
+      "status": "null",
+      "title": "Instruction–Data",
+      "description": "No confirmed baseline DATA successes; incremental security benefit cannot be estimated.",
+      "evidence": "No measurable baseline attack set"
+    }
+  },
+  "limitations": [
+    "Fixed, explicit attacks are structurally aligned with narrow defenses.",
+    "Only 12 cases per attack-family subgroup.",
+    "One response per prompt; no stochastic repeat estimate.",
+    "Selected models differ in family, scale, training, templates, and runtime.",
+    "Full-output adjudication is transparent but single-reviewer."
+  ]
+}
