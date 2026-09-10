@@ -449,9 +449,6 @@ PromptGuard-Ai/
 │   ├── run_cross_model_gemma3.py
 │   └── tests/
 │
-├── docs/
-│   └── IMPLEMENTATION_STATUS.md
-│
 └── README.md
 ```
 

@@ -1,4 +1,4 @@
-# Secrets
+# Local environment and secrets
 .env
 .env.local
 .env.*.local
@@ -20,20 +20,66 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
-# Runtime databases / logs
+# Runtime databases and logs
 *.db
 *.sqlite
 *.sqlite3
 *.log
-benchmark_results/
-backend/benchmark_results/
+/benchmark_results/
+/backend/benchmark_results/*
+!/backend/benchmark_results/cross_model/
+/backend/benchmark_results/cross_model/*
+!/backend/benchmark_results/cross_model/final_analysis/
 
 # Editors / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+Desktop.ini
+*.swp
+*~
 
 # Build / coverage
 coverage/
 htmlcov/
+.coverage
+coverage.xml
+
+# Local temporary files
+*.bak
+*.tmp
+
+# AI-assisted development files
+/AGENT.md
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/MASTER_ANTIGRAVITY_PROMPT.md
+/MASTER_CODEX_PROMPT.md
+/PHASE_LAUNCHERS.md
+/agent-prompts/
+/.agents/
+/.claude/
+/.codex/
+/.gemini/
+/.github/copilot-instructions.md
+/docs/ARCHITECTURE.md
+/docs/DESIGN_REFERENCE.md
+/docs/FILE_MAP.md
+/docs/HANDOFF_PROTOCOL.md
+/docs/HYBRID_EXECUTION_PLAN.md
+/docs/IMPLEMENTATION_PLAN.md
+/docs/IMPLEMENTATION_STATUS.md
+/docs/MODEL_STRATEGY.md
+/docs/PROJECT_SPEC.md
+/docs/RESEARCH_RULES.md
+/docs/TOKEN_RULES.md
+
+# Development packaging and local diagnostics
+/FILE_MANIFEST.txt
+/PACKAGE_QA.md
+/PACKAGE_VERSION.txt
+/START_HERE.txt
+/design-reference/
+/scripts/test-model-routes.ps1
