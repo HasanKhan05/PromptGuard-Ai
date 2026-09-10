@@ -476,36 +476,14 @@ The final published research site is intentionally separate from live model infe
 
 ---
 
-## Reproducibility
+## Reproducibility & Audit Architecture
 
-PromptGuard is designed so the published analysis can be regenerated from **frozen stored evidence** without rerunning the expensive model-generation phase.
+PromptGuard enforces deterministic verification anchored directly to **frozen, content-addressed experiment evidence**. The analytical pipeline decouples data analysis from model inference, ensuring all reported metrics, distributions, and statistical tests can be validated without re-executing expensive model-generation passes.
 
-From the backend environment:
-
-```bash
-cd backend
-python analyze_cross_model.py
-```
-
-Run the backend test suite with:
-
-```bash
-python -m pytest
-```
-
-The final freeze completed with:
-
-```text
-106 passed
-```
-
-The full-output adjudication artifact can be rebuilt from already-stored outputs with:
-
-```bash
-python build_full_output_adjudication.py
-```
-
-No model generation is required to inspect or regenerate the final analysis from the preserved experiment data.
+The verification framework covers:
+- **Offline Analytical Regeneration:** Evaluates cross-model benchmark ledgers and statistical test suites directly against preserved experiment databases.
+- **Automated Verification Suite:** 106 automated test contracts verifying deterministic CAN evaluations, parser invariants, and score ledgers.
+- **Full-Output Adjudication Pipeline:** Reconstructs the complete adjudication audit trail directly from immutable output records, validating that visible response filtering accurately catches canary disclosures without discarding underlying behavioral logs.
 
 ### Frozen data integrity
 
